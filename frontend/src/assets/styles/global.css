@@ -1,0 +1,17 @@
+:root {
+    --primary-color: #8b5cf6;
+    --secondary-color: #f472b6;
+    --text-color: #2d3748;
+    --bg-color: #f8fafc;
+  }
+  
+  body {
+    margin: 0;
+     font-family: 'Open Sans', sans-serif;
+    background-color: var(--bg-color);
+  }
+  
+  a {
+    text-decoration: none;
+    color: inherit;
+  }

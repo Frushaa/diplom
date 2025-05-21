@@ -1,0 +1,269 @@
+.mainWrapper {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  color: #494949;
+}
+
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 2rem;
+  margin: 80px auto;
+  width: 100%;
+  max-width: 510px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15); 
+}
+
+.title {
+  text-align: center;
+  color: var(--primary-color);
+  font-size: 2.2rem;
+  margin-bottom: 2.5rem;
+  font-family: 'Modak', cursive;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 4px rgba(139, 92, 246, 0.1);
+}
+
+.conteiner h2 {
+    font-family: "Modak", system-ui;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.8rem;
+}
+
+.formGroup {
+  position: relative;
+  max-width: 95%;
+}
+
+.title {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 700;
+}
+
+.loginLink {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 400;
+  margin-top: 1.5rem;
+  text-align: center;
+  color: #666;
+}
+
+.link {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  position: relative;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 0.3s ease;
+}
+
+.link:hover::after {
+  width: 100%;
+}
+
+.label {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.8rem;
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.input {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e9e3f8;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+  margin-top: 0.5rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.inputError {
+  border-color: #ef4444 !important;
+  animation: shake 0.4s;
+}
+
+.validationInfo {
+  color: #6c757d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.errorMessage {
+  color: #ef4444;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #fef2f2;
+  border-radius: 4px;
+}
+
+
+.submitButton {
+  font-family: 'Open Sans', sans-serif;
+  font-weight: 600;
+  width: 100%;
+  padding: 1.2rem;
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.3s;
+  margin-top: 1.5rem;
+}
+
+.submitButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
+}
+
+.submitButton:disabled {
+  background: #e9d8fd;
+  color: #553c9a !important;
+}
+
+.validationTips {
+  margin-top: 1rem;
+  padding: 1.2rem;
+  background: rgb(255, 255, 255);
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.validationRow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0.7rem 0;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.validIcon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.valid {
+  background: #8b5cf6;
+  color: white;
+}
+
+.invalid {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.generalError {
+  color: #ef4444;
+  font-size: 0.9rem;
+  padding: 0.7rem;
+  background: #fef2f2;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.loginLink {
+  text-align: center;
+  margin-top: 2rem;
+  color: var(--text-color);
+}
+
+.loginLink a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  position: relative;
+}
+
+.link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: currentColor;
+  transition: width 0.3s ease;
+}
+
+.loginLink a:hover::after {
+  width: 100%;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
+@keyframes slideDown {
+  0% {
+    top: -50px;
+    opacity: 0;
+  }
+  100% {
+    top: 20px;
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    margin: 2rem auto;
+    padding: 2rem 1.5rem;
+    border-radius: 15px;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+  }
+  
+  .input {
+    padding: 0.8rem;
+  }
+  
+  .submitButton {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+}
