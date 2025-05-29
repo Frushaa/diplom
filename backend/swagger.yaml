@@ -52,17 +52,6 @@ components:
           type: string
         end_time:
           type: string
-    Break:
-      type: object
-      properties:
-        id:
-          type: integer
-        work_slot_id:
-          type: integer
-        start_time:
-          type: string
-        end_time:
-          type: string
 
     BookingRequest:
       type: object
@@ -213,8 +202,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Service'
+    delete:
+      tags: [Services]
+      summary: Удалить услуги (только для мастера)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceDeleteRequest'
+      responses:
+        '204':
+          description: Услуги успешно удалены
+        '403':
+          description: Нет прав доступа
+        '500':
+          description: Ошибка сервера
 
-  /schedule/work-slots:
+  schedule/work-slots:
     post:
       tags: [Schedule]
       summary: Создать рабочий слот (только для мастера)
@@ -225,29 +232,34 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                date:
-                  type: string
-                  example: "2024-01-20"
-                start_time:
-                  type: string
-                  example: "09:00"
-                end_time:
-                  type: string
-                  example: "18:00"
+              $ref: '#/components/schemas/WorkSlot'
       responses:
         '201':
           description: Создан рабочий слот
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkSlot' 
+                $ref: '#/components/schemas/WorkSlot'
 
-  /schedule/work-slots/{id}/breaks:
-    post:
+    get:
       tags: [Schedule]
-      summary: Добавить перерыв в рабочий слот
+      summary: Получить рабочие слоты мастера
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список рабочих слотов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkSlot'
+
+  /schedule/work-slots/{id}:
+    delete:
+      tags: [Schedule]
+      summary: Удалить рабочий слот (только для мастера)
       security:
         - bearerAuth: []
       parameters:
@@ -256,26 +268,13 @@ paths:
           required: true
           schema:
             type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                start_time:
-                  type: string
-                  example: "13:00"
-                end_time:
-                  type: string
-                  example: "14:00"
       responses:
-        '201':
-          description: Создан перерыв
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Break'
+        '204':
+          description: Рабочий слот успешно удален
+        '404':
+          description: Рабочий слот не найден или нет прав доступа
+        '500':
+          description: Внутренняя ошибка сервера
       
   /bookings:
     post:
@@ -296,31 +295,4 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Booking'
-  
-  /schedule/available-slots:
-    get:
-      tags: [Schedule]
-      summary: Получить свободные слоты с учетом перерывов
-      parameters:
-        - name: service_id
-          in: query
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Список доступных интервалов
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    date:
-                      type: string
-                      format: date
-                    start_time:
-                      type: string
-                    end_time:
-                      type: string
+

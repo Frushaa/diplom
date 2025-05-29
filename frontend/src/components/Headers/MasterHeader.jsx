@@ -8,7 +8,7 @@ const MasterHeader = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    localStorage.removeItem('token');
+    window.location.href = '/';
   };
 
   return (

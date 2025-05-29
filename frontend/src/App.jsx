@@ -18,11 +18,11 @@ function App() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           const response = await api.get('/auth/profile');
           dispatch(login({
-            email: response.data.email,
-            role: response.data.role,
-            username: response.data.username 
+            ...response.data,
+            token: token 
           }));
         } catch (error) {
           localStorage.removeItem('token');

@@ -19,12 +19,12 @@ router.post(
 
       const slot = await pool.query(
         `SELECT * FROM work_slots 
-         WHERE id = $1 
-         AND master_id = (SELECT master_id FROM services WHERE id = $2)
-         AND NOT EXISTS (
-           SELECT 1 FROM bookings 
-           WHERE work_slot_id = $1
-         )`,
+        WHERE id = $1 
+        AND master_id = (SELECT master_id FROM services WHERE id = $2)
+        AND NOT EXISTS (
+          SELECT 1 FROM bookings 
+          WHERE work_slot_id = $1
+        )`,
         [work_slot_id, service_id]
       );
 

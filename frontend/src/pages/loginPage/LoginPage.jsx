@@ -26,8 +26,9 @@ const LoginPage = () => {
       localStorage.setItem('token', response.data.token);
       console.log('Токен сохранен:', localStorage.getItem('token')); 
       dispatch(login({ 
-        email: response.data.email, 
-        role: response.data.role 
+        ...response.data.user,
+      token: response.data.token,
+      role: response.data.role
       }));
 
       if (response.data.role === 'master') {

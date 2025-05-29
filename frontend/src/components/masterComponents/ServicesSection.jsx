@@ -1,20 +1,25 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiEdit, FiTrash, FiTrash2, FiX, FiCheck } from 'react-icons/fi';
+import { FiEdit } from 'react-icons/fi';
 import api from '../../services/api';
 import styles from '../../pages/masterPage/MasterProfile.module.css';
 import { useAppDispatch, useAppSelector } from '../../store/store';
-import { addService, setServices } from '../../store/slices/servicesSlice';
+import { addService } from '../../store/slices/servicesSlice';
 
-const ServicesSection = ({ isModal = false, onClose }) => {
-  const [selectedServices, setSelectedServices] = useState([]);
-  const [isDeleteMode, setIsDeleteMode] = useState(false);
+const ServicesSection = ({ 
+  isModal = false, 
+  onClose,
+  isDeleteMode,
+  selectedServices,
+  onToggleService,
+  onEditService
+}) => {
   const { services } = useAppSelector(state => state.services);
   const [newService, setNewService] = useState({
     title: '',
     description: '',
     price: '',
-    duration: '60 минут'
+    duration: '30 минут'
   });
   const dispatch = useAppDispatch();
 
@@ -23,26 +28,6 @@ const ServicesSection = ({ isModal = false, onClose }) => {
     '1 час': '1 hour',
     '1.5 часа': '90 minutes', 
     '2 часа': '120 minutes'
-  };
-
-   const toggleServiceSelection = (serviceId) => {
-    if (selectedServices.includes(serviceId)) {
-      setSelectedServices(selectedServices.filter(id => id !== serviceId));
-    } else {
-      setSelectedServices([...selectedServices, serviceId]);
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    try {
-      await api.delete('/services', { data: { ids: selectedServices } });
-      const response = await api.get('/services');
-      dispatch(setServices(response.data));
-      setSelectedServices([]);
-      setIsDeleteMode(false);
-    } catch (error) {
-      console.error('Ошибка удаления:', error);
-    }
   };
 
   const handleCreateService = async () => {
@@ -70,14 +55,6 @@ const ServicesSection = ({ isModal = false, onClose }) => {
     } catch (error) {
       console.error('Ошибка:', error.response?.data);
     }
-  };
-
-  const handleEditService = (service) => {
-    console.log('Редактирование услуги:', service);
-  };
-
-  const handleDeleteService = (id) => {
-    console.log('Удаление услуги с id:', id);
   };
 
   const formatDuration = (minutes) => {
@@ -150,55 +127,22 @@ const ServicesSection = ({ isModal = false, onClose }) => {
         </button>
       </div>
       
-
       {!isModal && (
         <div className={styles.servicesPanel}>
-          <div className={styles.panelHeader}>
-            <h3 className={styles.panelTitle}>Мои услуги</h3>
-            
-            {!isDeleteMode ? (
-              <button 
-                onClick={() => setIsDeleteMode(true)}
-                className={styles.deleteModeButton}
-              >
-                <FiTrash2 /> Удалить
-              </button>
-            ) : (
-              <div className={styles.deleteActions}>
-                <button 
-                  onClick={handleDeleteSelected}
-                  disabled={selectedServices.length === 0}
-                  className={styles.confirmDeleteButton}
-                >
-                  <FiCheck /> Удалить выбранные ({selectedServices.length})
-                </button>
-                <button 
-                  onClick={() => {
-                    setIsDeleteMode(false);
-                    setSelectedServices([]);
-                  }}
-                  className={styles.cancelDeleteButton}
-                >
-                  <FiX /> Отмена
-                </button>
-              </div>
-            )}
-          </div>
-          
-          <motion.div className={styles.servicesList}>
+          <div className={styles.servicesList}>
             {services?.map(service => (
               <motion.div
                 key={service.id}
                 className={`${styles.serviceItem} ${
-                  selectedServices.includes(service.id) ? styles.selectedItem : ''
+                  selectedServices?.includes(service.id) ? styles.selectedItem : ''
                 }`}
                 whileHover={{ backgroundColor: '#f8fafc' }}
               >
                 {isDeleteMode && (
                   <input
                     type="checkbox"
-                    checked={selectedServices.includes(service.id)}
-                    onChange={() => toggleServiceSelection(service.id)}
+                    checked={selectedServices?.includes(service.id)}
+                    onChange={() => onToggleService(service.id)}
                     className={styles.serviceCheckbox}
                   />
                 )}
@@ -214,21 +158,15 @@ const ServicesSection = ({ isModal = false, onClose }) => {
                   <div className={styles.serviceActions}>
                     <button 
                       className={styles.actionButton}
-                      onClick={() => handleEditService(service)}
+                      onClick={() => onEditService(service)}
                     >
                       <FiEdit size={16} />
-                    </button>
-                    <button 
-                      className={styles.actionButton}
-                      onClick={() => handleDeleteService(service.id)}
-                    >
-                      <FiTrash size={16} />
                     </button>
                   </div>
                 )}
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
       )}
     </div>

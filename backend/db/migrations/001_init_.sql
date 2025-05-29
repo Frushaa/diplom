@@ -15,14 +15,6 @@ CREATE TABLE work_slots (
   CHECK (start_time < end_time)
 );
 
-CREATE TABLE breaks (
-  id SERIAL PRIMARY KEY,
-  work_slot_id INTEGER REFERENCES work_slots(id) ON DELETE CASCADE,
-  start_time TIME NOT NULL,
-  end_time TIME NOT NULL,
-  CHECK (start_time < end_time)
-);
-
 CREATE TABLE services (
   id SERIAL PRIMARY KEY,
   master_id INTEGER REFERENCES users(id),

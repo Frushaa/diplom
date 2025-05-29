@@ -136,7 +136,7 @@
 @media (max-width: 1024px) {
 
 .logo {
-  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  font-size: clamp(1.8rem, 2vw, 2rem);
 }
 
 .centerNav {
