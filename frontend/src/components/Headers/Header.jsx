@@ -1,7 +1,20 @@
 import { Link } from 'react-router-dom';
 import styles from './header.module.css';
+import { useSelector } from 'react-redux';
+import { scroller } from 'react-scroll';
 
 const Header = () => {
+  const { user } = useSelector(state => state.auth);
+  const scrollToSection = (sectionId) => {
+    scroller.scrollTo(sectionId, {
+      duration: 800,
+      delay: 0,
+      smooth: 'easeInOutQuart',
+      offset: -100
+    });
+  };
+
+
   return (
     <header className={styles.header}>
       <nav className={styles.navContainer}>
@@ -10,34 +23,48 @@ const Header = () => {
         </Link>
 
         <div className={styles.centerNav}>
-          <Link to="/about" className={styles.navLink}>
+          <button 
+            onClick={() => scrollToSection('about')} 
+            className={styles.navLink} 
+          >
             О нас
-          </Link>
-          <Link to="/services" className={styles.navLink}>
+          </button>
+          <button 
+            onClick={() => scrollToSection('services')} 
+            className={styles.navLink}
+          >
             Услуги
-          </Link>
-          <Link to="/bookings" className={styles.navLink}>
-            Запись
-          </Link>
+          </button>
+          <button 
+            onClick={() => scrollToSection('faq')}
+            className={styles.navLink}
+          >
+            FAQ
+          </button>
+
         </div>
 
-        <div className={styles.authButtons}>
+        {user ? (
           <Link 
-            to="/register" 
-            className={`${styles.button} ${styles.registerButton}`}
+            to={user.role === 'master' ? '/master-profile' : '/client-profile'}
+            className={`${styles.button} ${styles.profileButton}`}
           >
-            Регистрация
+            Мой профиль
           </Link>
-          <Link 
-            to="/login" 
-            className={`${styles.button} ${styles.loginButton}`}
-          >
-            Вход
-          </Link>
-        </div>
+        ) : (
+          <div className={styles.authButtons}>
+            <Link to="/register" className={`${styles.button} ${styles.registerButton}`}>
+              Регистрация
+            </Link>
+            <Link to="/login" className={`${styles.button} ${styles.loginButton}`}>
+              Вход
+            </Link>
+          </div>
+        )}
       </nav>
     </header>
   );
 };
+
 
 export default Header;

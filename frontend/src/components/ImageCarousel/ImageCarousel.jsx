@@ -31,8 +31,10 @@ const ImageCarousel = () => {
           <div key={index} className={styles.slide}>
             <img 
               src={img} 
-              alt={`Слайд ${index + 1}`} 
+              alt={`Слайд ${index + 1}`}
               className={styles.image}
+              loading="lazy"
+              decoding="async"
             />
           </div>
         ))}

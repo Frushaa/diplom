@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../store/store';
 import api from '../../services/api';
 import { login } from '../../store/slices/authSlice';
 import SimplifiedHeader from '../../components/Headers/SimplifiedHeader';
@@ -11,7 +10,6 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -21,21 +19,10 @@ const LoginPage = () => {
 
     try {
       const response = await api.post('/auth/login', { email, password });
-      console.log('Ответ сервера:', response.data);
-      
-      localStorage.setItem('token', response.data.token);
-      console.log('Токен сохранен:', localStorage.getItem('token')); 
-      dispatch(login({ 
-        ...response.data.user,
-      token: response.data.token,
-      role: response.data.role
-      }));
-
-      if (response.data.role === 'master') {
-      navigate('/master-profile');
-    } else {
-      navigate('/client-profile');
-    }
+    localStorage.setItem('token', response.data.token);
+    const profileResponse = await api.get('/auth/profile');
+    login(profileResponse.data, response.data.token);
+    navigate(profileResponse.data.role === 'master' ? '/master-profile' : '/client-profile');
     } catch (error) {
       const errorMessage = error.response?.data?.error || 'Ошибка входа';
       setError(errorMessage.includes('пароль') 

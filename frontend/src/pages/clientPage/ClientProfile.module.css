@@ -1,0 +1,50 @@
+.actionsSection {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.actionButton {
+  display: inline-block;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.primaryButton {
+  background:#9d81dd;
+  color: rgb(255, 255, 255);
+}
+
+.primaryButton:hover {
+  background: #7c3aed;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.secondaryButton {
+  background: #9d81dd;
+  color: white;
+}
+
+.secondaryButton:hover {
+  background: #7c3aed;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .actionsSection {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .actionButton {
+    width: 100%;
+    padding: 0.8rem;
+  }
+}

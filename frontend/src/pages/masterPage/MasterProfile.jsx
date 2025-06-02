@@ -4,7 +4,7 @@ import { setServices } from '../../store/slices/servicesSlice';
 import { FiTrash2, FiX, FiCheck } from 'react-icons/fi';
 import api from '../../services/api';
 import styles from './MasterProfile.module.css';
-import MasterHeader from '../../components/Headers/MasterHeader';
+import ProfileHeader from '../../components/Headers/ProfileHeader';
 import ServicesSection from '../../components/masterComponents/ServicesSection';
 import ScheduleSection from '../../components/masterComponents/ScheduleSection';
 
@@ -91,7 +91,7 @@ const MasterProfile = () => {
 
   return (
     <div className={styles.container}>
-      <MasterHeader />
+      <ProfileHeader />
       
       <div className={styles.dashboard}>
         <h2 className={styles.greeting}>

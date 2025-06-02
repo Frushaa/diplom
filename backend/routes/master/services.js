@@ -6,8 +6,6 @@ const { serviceSchema } = require('../../validators/serviceValidator');
 
 router.get(
   '/',
-  authenticate,
-  checkRole('master'),
   async (req, res) => {
     try {
       const result = await pool.query(
@@ -17,9 +15,7 @@ router.get(
           description, 
           price, 
           EXTRACT(EPOCH FROM duration)/60 AS duration
-         FROM services 
-         WHERE master_id = $1`,
-        [req.user.id]
+         FROM services`
       );
 
       res.json(result.rows);
@@ -65,7 +61,10 @@ router.post(
   }
 );
 
-router.delete('/', authenticate, checkRole('master'), async (req, res) => {
+router.delete('/', 
+  authenticate, 
+  checkRole('master'), 
+  async (req, res) => {
   try {
     await pool.query('DELETE FROM services WHERE id = ANY($1) AND master_id = $2', 
       [req.body.ids, req.user.id]);

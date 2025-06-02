@@ -95,12 +95,11 @@ router.post('/login', async (req, res) => {
 router.get('/profile', authenticate, async (req, res) => {
   console.log('Запрос на /profile получен!');
   try {
-    const userId = req.user.id;
-    const result = await pool.query(
+    const user = await pool.query(
       'SELECT id, username, email, role FROM users WHERE id = $1',
-      [userId]
+      [req.user.id]
     );
-    res.json(result.rows[0]);
+    res.json(user.rows[0]);
   } catch (err) {
     res.status(500).json({ error: 'Ошибка сервера' });
   }

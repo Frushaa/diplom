@@ -1,0 +1,164 @@
+.footer {
+  background-color: #2d3748;
+  color: #f7fafc;
+  padding: 4rem 0 0;
+  font-family: 'Open Sans', sans-serif;
+}
+
+.footerContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.footerBrand {
+  display: flex;
+  flex-direction: column;
+}
+
+.footerLogo {
+  font-family: 'Modak', cursive;
+  font-size: 2rem;
+  color: #f7fafc;
+  text-decoration: none;
+  margin-bottom: 1rem;
+  transition: color 0.3s ease;
+}
+
+.footerLogo:hover {
+  color: #9f7aea;
+}
+
+.footerDescription {
+  color: #cbd5e0;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.socialLinks {
+  display: flex;
+  gap: 1rem;
+}
+
+.socialLinks a {
+  color: #cbd5e0;
+  font-size: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.socialLinks a:hover {
+  color: #9f7aea;
+}
+
+/* Навигация */
+.footerNav ul,
+.footerContacts ul,
+.footerHours ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footerTitle {
+  font-size: 1.25rem;
+  color: #f7fafc;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.footerTitle::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 50px;
+  height: 2px;
+  background-color: #9f7aea;
+}
+
+.footerLink {
+  color: #cbd5e0;
+  text-decoration: none;
+  display: block;
+  padding: 0.5rem 0;
+  transition: color 0.3s ease;
+}
+
+.footerLink:hover {
+  color: #9f7aea;
+}
+
+/* Контакты */
+.footerContacts li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.contactIcon {
+  margin-right: 0.75rem;
+  color: #9f7aea;
+  min-width: 20px;
+}
+
+.footerContacts a {
+  color: #cbd5e0;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footerContacts a:hover {
+  color: #9f7aea;
+}
+
+.footerHours li {
+  margin-bottom: 0.5rem;
+  color: #cbd5e0;
+}
+
+.bookingButton {
+  background: #9f7aea;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 250px;
+}
+
+.bookingButton:hover {
+  background: #805ad5;
+  transform: translateY(-2px);
+}
+
+.copyright {
+  text-align: center;
+  padding: 1.5rem 0;
+  margin-top: 3rem;
+  border-top: 1px solid #4a5568;
+  color: #a0aec0;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .footerContainer {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+  
+  .footer {
+    padding: 3rem 0 0;
+  }
+  
+  .footerTitle {
+    margin-bottom: 1rem;
+  }
+}

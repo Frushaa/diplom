@@ -1,0 +1,134 @@
+.sliderSection {
+  max-width: 1720px;
+  margin: 4.6rem;
+  padding-top: 4.6rem; 
+}
+
+.sectionTitle {
+  text-align: center;
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin-bottom: 2rem;
+}
+
+.sliderContainer {
+  position: relative;
+}
+
+.serviceCard {
+  width: 85% !important; 
+  background: rgb(255, 255, 255);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 0 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: 250px;
+  display: flex !important;
+  flex-direction: column;
+  transition: transform 0.3s ease;
+}
+
+.serviceCard:hover {
+  transform: translateY(-5px);
+}
+
+.description {
+  flex-grow: 1;
+  margin: 1rem 0;
+  color: #555;
+}
+
+.details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem 0;
+  padding: 0.5rem 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  color: #a788f0;
+}
+
+.duration {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #a788f0;
+}
+
+.bookButton {
+  background:#8b5cf6;
+  color: rgb(255, 255, 255);
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  width: 40%;
+}
+
+.bookButton:hover {
+  background: #7c3aed;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+}
+
+.slick-slide {
+  padding: 0px 5px;
+}
+
+.slick-list {
+  margin: 0 -5px;
+}
+
+.slick-center .serviceCard {
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: white;
+  border: 2px solid #8b5cf6;
+  border-radius: 50%;
+  color: #8b5cf6;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.233);
+}
+
+.arrow:hover {
+  background: #8b5cf6;
+  color: white;
+}
+
+.prev {
+  left: -20px;
+}
+
+.next {
+  right: -20px;
+}
+
+@media (max-width: 768px) {
+  .sliderSection {
+    padding: 0 10px;
+  }
+  
+  .serviceCard {
+    height: auto;
+    padding: 1.5rem;
+  }
+}
