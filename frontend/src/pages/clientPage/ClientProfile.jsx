@@ -1,36 +1,58 @@
 import { useAppSelector } from '../../store/store';
-import ProfileHeader from '../../components/Headers/ProfileHeader'
-import styles from './ClientProfile.module.css'
-import { Link } from 'react-router-dom';
+import ClientHeader from '../../components/Headers/ClientHeader';
+import styles from './ClientProfile.module.css';
+import { FaHistory, FaCalendarAlt, FaStar, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import ProfileSettings from './ProfileSettings';
+import { useState } from 'react';
 
 const ClientProfile = () => {
   const { user } = useAppSelector(state => state.auth);
-
+  const [activeTab, setActiveTab] = useState('bookings');
+  
   return (
-    <div className="profile-container">
-      <ProfileHeader />
-
-      <h1>Профиль клиента</h1>
-      <div className="profile-info">
-        <p>Имя: {user?.username}</p>
-        <p>Email: {user?.email}</p>
-      </div>
-      <div className={styles.actionsSection}>
-          <Link 
-            to="/services" 
-            className={`${styles.actionButton} ${styles.primaryButton}`}
-          >
-            Посмотреть услуги
-          </Link>
+    <div className={styles.profileContainer}>
+      <ClientHeader />
+      
+      <div className={styles.profileContent}>
+        <aside className={styles.sidebar}>
+          <div className={styles.profileCard}>
+            <div className={styles.avatar}>
+              {user?.username?.charAt(0).toUpperCase()}
+            </div>
+            <h3>{user?.username}</h3>
+            <p>{user?.email}</p>
+          </div>
           
-          <Link 
-            to="/bookings" 
-            className={`${styles.actionButton} ${styles.secondaryButton}`}
-          >
-            Мои записи
-          </Link>
-        </div>
+          <nav className={styles.sidebarNav}>
+            <button className={`${styles.navButton} ${styles.active}`}>
+              <FaHistory /> История записей
+            </button>
+            <button className={styles.navButton}>
+              <FaCalendarAlt /> Предстоящие записи
+            </button>
+            <button className={styles.navButton}>
+              <FaStar /> Избранные мастера
+            </button>
+            <button 
+              className={`${styles.navButton} ${activeTab === 'settings' ? styles.active : ''}`}
+              onClick={() => setActiveTab('settings')}
+            >
+              <FaCog /> Настройки
+            </button>
+            <button className={styles.navButton}>
+              <FaSignOutAlt /> Выйти
+            </button>
+          </nav>
+        </aside>
 
+        <main className={styles.mainContent}>
+          {activeTab === 'settings' && (
+            <section className={styles.section}>
+              <ProfileSettings />
+            </section>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

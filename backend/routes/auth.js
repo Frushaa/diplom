@@ -96,11 +96,54 @@ router.get('/profile', authenticate, async (req, res) => {
   console.log('Запрос на /profile получен!');
   try {
     const user = await pool.query(
-      'SELECT id, username, email, role FROM users WHERE id = $1',
+      'SELECT id, username, email, phone, role FROM users WHERE id = $1',
       [req.user.id]
     );
+    if (user.rows.length === 0) {
+      return res.status(404).json({ error: 'Пользователь не найден' });
+    }
     res.json(user.rows[0]);
   } catch (err) {
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+router.put('/profile', authenticate, async (req, res) => {
+  try {
+    const { username, email, phone = null } = req.body; 
+    const userId = req.user.id;
+
+    const errors = {};
+    
+    const emailCheck = await pool.query(
+      'SELECT id FROM users WHERE email = $1 AND id != $2',
+      [email, userId]
+    );
+    
+    const usernameCheck = await pool.query(
+      'SELECT id FROM users WHERE username = $1 AND id != $2',
+      [username, userId]
+    );
+
+    if (emailCheck.rows.length > 0) errors.email = 'Этот Email уже занят';
+    if (usernameCheck.rows.length > 0) errors.username = 'Имя пользователя уже занято';
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    // Обновление данных
+    const updatedUser = await pool.query(
+      `UPDATE users 
+       SET username = $1, email = $2, phone = $3
+       WHERE id = $4
+       RETURNING id, username, email, phone, role, avatar`,
+      [username, email, phone, userId]
+    );
+
+    res.json(updatedUser.rows[0]);
+  } catch (err) {
+    console.error('Ошибка обновления профиля:', err);
     res.status(500).json({ error: 'Ошибка сервера' });
   }
 });
