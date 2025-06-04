@@ -4,42 +4,36 @@ const router = express.Router();
 const { authenticate, checkRole } = require('../../middleware/roleMiddleware');
 const Booking = require('../../models/Booking');
 const { bookingSchema } = require('../../validators/bookingValidator');
+const { checkTimeAvailability } =require ('../../utils/bookingUtils');
 
-router.post(
-  '/',
-  authenticate,
-  checkRole('client'),
-  async (req, res) => {
-    try {
-      const { error } = bookingSchema.validate(req.body);
-      if (error) return res.status(400).json({ error: error.details[0].message });
+router.post('/', authenticate, checkRole('client'), async (req, res) => {
+  try {
+    console.log('Request body:', req.body);
+    const { service_id, work_slot_id, start_time, duration } = req.body;
+    const client_id = req.user.id;
 
-      const { service_id, work_slot_id } = req.body;
-      const client_id = req.user.id;
-
-      const slot = await pool.query(
-        `SELECT * FROM work_slots 
-        WHERE id = $1 
-        AND master_id = (SELECT master_id FROM services WHERE id = $2)
-        AND NOT EXISTS (
-          SELECT 1 FROM bookings 
-          WHERE work_slot_id = $1
-        )`,
-        [work_slot_id, service_id]
-      );
-
-      if (!slot.rows[0]) {
-        return res.status(400).json({ error: 'Слот занят или недоступен' });
-      }
-
-      const booking = await Booking.create({ client_id, service_id, work_slot_id });
-      res.status(201).json(booking);
-    } catch (err) {
-      console.error('Ошибка бронирования:', err);
-      res.status(500).json({ error: 'Ошибка сервера' });
+    const isAvailable = await checkTimeAvailability(work_slot_id, start_time, duration);
+    if (!isAvailable) {
+      return res.status(400).json({ error: 'Выбранное время уже занято' });
     }
+
+    const result = await pool.query(
+      `INSERT INTO bookings 
+       (client_id, service_id, work_slot_id, start_time, duration, status)
+       VALUES ($1, $2, $3, $4, $5, 'pending')
+       RETURNING *`,
+      [client_id, service_id, work_slot_id, start_time, duration]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('Error in POST /bookings:', err.stack); 
+    res.status(500).json({ 
+      error: 'Ошибка сервера',
+      message: err.message 
+    });
   }
-);
+});
 
 router.get(
   '/',
@@ -59,7 +53,6 @@ router.get(
     }
   }
 );
-
 
 router.patch(
   '/:id/status',

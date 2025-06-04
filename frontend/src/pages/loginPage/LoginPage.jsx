@@ -4,8 +4,10 @@ import api from '../../services/api';
 import { login } from '../../store/slices/authSlice';
 import SimplifiedHeader from '../../components/Headers/SimplifiedHeader';
 import styles from '../loginPage/LoginPage.module.css';
+import { useDispatch } from 'react-redux';
 
 const LoginPage = () => {
+  const dispatch = useDispatch();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -19,15 +21,18 @@ const LoginPage = () => {
 
     try {
       const response = await api.post('/auth/login', { email, password });
-    localStorage.setItem('token', response.data.token);
-    const profileResponse = await api.get('/auth/profile');
-    login(profileResponse.data, response.data.token);
-    navigate(profileResponse.data.role === 'master' ? '/master-profile' : '/client-profile');
+      localStorage.setItem('token', response.data.token);
+      const profileResponse = await api.get('/auth/profile');
+        dispatch(login({ 
+        ...profileResponse.data, 
+        token: response.data.token 
+      }));
+        navigate(profileResponse.data.role === 'master' ? '/master-profile' : '/client-profile');
     } catch (error) {
       const errorMessage = error.response?.data?.error || 'Ошибка входа';
-      setError(errorMessage.includes('пароль') 
-        ? 'Неверный email или пароль' 
-        : errorMessage);
+        setError(errorMessage.includes('пароль') 
+          ? 'Неверный email или пароль' 
+          : errorMessage);
     } finally {
       setIsSubmitting(false);
     }

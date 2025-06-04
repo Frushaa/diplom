@@ -318,6 +318,21 @@ select option {
   padding: 1rem;
 }
 
+.secondaryButton {
+  background: #8b5cf6;
+  color: white;
+  padding: 1rem 2rem;
+  margin-top: 5%;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.secondaryButton:hover {
+  background: #7c3aed;
+}
+
 @media (max-width: 768px) {
   .servicesGrid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));

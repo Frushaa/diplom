@@ -37,7 +37,8 @@ components:
         price:
           type: number
         duration:
-          type: string
+          type: integer
+          description: Длительность услуги в минутах
     WorkSlot:
       type: object
       properties:
@@ -53,6 +54,19 @@ components:
         end_time:
           type: string
 
+    AvailableTime:
+      type: object
+      properties:
+        start:
+          type: string
+          description: Начало доступного интервала (HH:MM)
+        end:
+          type: string
+          description: Конец доступного интервала (HH:MM)
+      example:
+        start: "10:00"
+        end: "12:00"
+
     BookingRequest:
       type: object
       properties:
@@ -62,6 +76,12 @@ components:
         work_slot_id:
           type: integer
           example: 1
+        start_time:
+          type: string
+          example: "14:30"
+        duration:
+          type: integer
+          example: 45
 
     Booking:
       type: object
@@ -74,9 +94,21 @@ components:
           type: integer
         work_slot_id:
           type: integer
+        start_time:
+          type: string
+        duration:
+          type: integer
         status:
           type: string
           enum: [pending, confirmed, canceled]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        details:
+          type: string
 
 paths:
   /auth/register:
@@ -112,6 +144,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/login:
     post:
@@ -141,6 +179,8 @@ paths:
                 properties:
                   token:
                     type: string
+        '401':
+          description: Неверные учетные данные
 
   /auth/profile:
     get:
@@ -193,8 +233,8 @@ paths:
                   type: number
                   example: 1500
                 duration:
-                  type: string
-                  example: "1 час"
+                  type: integer
+                  example: 60
       responses:
         '201':
           description: Услуга успешно создана
@@ -202,6 +242,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Service'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный доступ
+        '403':
+          description: Недостаточно прав
     delete:
       tags: [Services]
       summary: Удалить услуги (только для мастера)
@@ -212,7 +262,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ServiceDeleteRequest'
+              type: array
+              items:
+                type: integer
+              example: [1, 2, 3]
       responses:
         '204':
           description: Услуги успешно удалены
@@ -221,7 +274,7 @@ paths:
         '500':
           description: Ошибка сервера
 
-  schedule/work-slots:
+  /schedule/work-slots:
     post:
       tags: [Schedule]
       summary: Создать рабочий слот (только для мастера)
@@ -232,7 +285,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/WorkSlot'
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                  example: "2023-10-10"
+                start_time:
+                  type: string
+                  example: "10:00"
+                end_time:
+                  type: string
+                  example: "21:00"
       responses:
         '201':
           description: Создан рабочий слот
@@ -240,12 +304,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkSlot'
+        '400':
+          description: Неверные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный доступ
+        '403':
+          description: Недостаточно прав
 
+  /schedule/work-slots:
     get:
       tags: [Schedule]
-      summary: Получить рабочие слоты мастера
-      security:
-        - bearerAuth: []
+      summary: Получить рабочие слоты мастера (публичный доступ)
+      description: Возвращает список рабочих слотов мастера для бронирования
       responses:
         '200':
           description: Список рабочих слотов
@@ -255,6 +329,53 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/WorkSlot'
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /schedule/available-times/{work_slot_id}::
+    get:
+      tags: [Schedule]
+      summary: Получить доступное время для бронирования
+      description: Возвращает список доступных временных интервалов в рабочем слоте
+      parameters:
+        - name: work_slot_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+        - name: duration
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Длительность услуги в минутах
+          example: 30
+      responses:
+        '200':
+          description: Список доступных временных интервалов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvailableTime'
+        '404':
+          description: Рабочий слот не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /schedule/work-slots/{id}:
     delete:
@@ -268,13 +389,28 @@ paths:
           required: true
           schema:
             type: integer
+          example: 1
       responses:
         '204':
           description: Рабочий слот успешно удален
+        '400':
+          description: Нельзя удалить слот с бронированиями
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный доступ
+        '403':
+          description: Недостаточно прав
         '404':
-          description: Рабочий слот не найден или нет прав доступа
+          description: Рабочий слот не найден
         '500':
           description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
       
   /bookings:
     post:
@@ -295,4 +431,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Booking'
-
+        '400':
+          description: Неверные данные или время недоступно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный доступ
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

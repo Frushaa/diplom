@@ -25,24 +25,19 @@ const ServicesSlider = () => {
   }, []);
 
   const formatDuration = (duration) => {
-    // Если duration - строка и уже содержит "мин" или "час", возвращаем как есть
     if (typeof duration === 'string' && (duration.includes('мин') || duration.includes('час'))) {
       return duration;
     }
     
-    // Пытаемся преобразовать в число
     const minutes = parseFloat(duration);
     
-    // Проверка на NaN
     if (isNaN(minutes)) return 'Длительность не указана';
     
-    // Форматирование
     if (minutes === 30) return '30 минут';
     if (minutes === 60) return '1 час';
     if (minutes === 90) return '1.5 часа';
     if (minutes === 120) return '2 часа';
     
-    // Для других значений
     if (minutes < 60) return `${minutes} минут`;
     
     const hours = minutes / 60;

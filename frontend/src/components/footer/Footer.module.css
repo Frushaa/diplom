@@ -53,7 +53,6 @@
   color: #9f7aea;
 }
 
-/* Навигация */
 .footerNav ul,
 .footerContacts ul,
 .footerHours ul {
@@ -92,7 +91,6 @@
   color: #9f7aea;
 }
 
-/* Контакты */
 .footerContacts li {
   display: flex;
   align-items: center;

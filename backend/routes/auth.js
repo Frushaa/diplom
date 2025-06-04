@@ -132,7 +132,6 @@ router.put('/profile', authenticate, async (req, res) => {
       return res.status(400).json({ errors });
     }
 
-    // Обновление данных
     const updatedUser = await pool.query(
       `UPDATE users 
        SET username = $1, email = $2, phone = $3

@@ -2,15 +2,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/store';
 import { logout } from '../../store/slices/authSlice';
 import styles from './ClientHeader.module.css';
-import { FaBell, FaSignOutAlt } from 'react-icons/fa';
+import { FaBell, FaSignOutAlt, FaPlus } from 'react-icons/fa';
 import { useEffect, useState } from 'react';
 import api from '../../services/api';
+import BookingModal from '../../components/BookingModal/BookingModal';
 
 const ClientHeader = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { user } = useAppSelector(state => state.auth);
   const [notificationsCount, setNotificationsCount] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -36,8 +38,15 @@ const ClientHeader = () => {
         <Link to="/" className={styles.logo}>
           Nail World
         </Link>
-
+        
         <nav className={styles.nav}>
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className={styles.bookingButton}
+          >
+            <FaPlus className={styles.bookingIcon} />
+            Записаться на услугу
+          </button>
           <Link to="/client-profile/notifications" className={styles.navLink}>
             <div className={styles.iconWithBadge}>
               <FaBell className={styles.icon} />
@@ -46,6 +55,7 @@ const ClientHeader = () => {
               )}
             </div>
           </Link>
+          
 
           <div className={styles.userMenu}>
             <img 
@@ -54,11 +64,17 @@ const ClientHeader = () => {
               className={styles.avatar}
             />
             <span className={styles.userName}>{user?.username}</span>
-            </div>
-            <button onClick={handleLogout} className={styles.logoutButton}>
-              <FaSignOutAlt />
-            </button>
+          </div>
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            <FaSignOutAlt />
+          </button>
         </nav>
+
+        <BookingModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)}
+        />
+
       </div>
     </header>
   );
