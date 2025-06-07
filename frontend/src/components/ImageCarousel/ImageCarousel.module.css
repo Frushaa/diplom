@@ -1,12 +1,12 @@
 .carouselContainer {
-    margin: 1% 2% 5% 2%;
-    max-width: 1720px;
+    margin: 1% 2% 5% 10% ;
+    max-width: 1400px;
     padding: 2%;
   }
   
   .slide {
     position: relative;
-    height: clamp(400px, 50vh, 600px);    
+    height: clamp(400px, 45vh, 600px);    
     overflow: hidden;
     border-radius: 15px;
   }
@@ -35,11 +35,7 @@
   
   @media (max-width: 768px) {
     .slide {
-    height: 40vh;
-    }
-    
-    .carouselContainer {
-      padding: 10px;
+    height: 30vh;
     }
   }
 

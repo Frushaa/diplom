@@ -1,0 +1,50 @@
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #7913ff80;
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  opacity: 0.9;
+  max-width: 300px;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.message {
+  margin-right: 15px;
+  font-size: 14px;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.notification:hover {
+  opacity: 1;
+}
+
+.success {
+  background-color: #8c2cc459;
+}
+
+.error {
+  background-color: #8c2cc459;
+}
+
+.warning {
+  background-color: #8c2cc459;
+}

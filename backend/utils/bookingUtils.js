@@ -1,138 +1,123 @@
 const pool = require('../config/db');
 
-async function getAvailableTimes(master_id, date, serviceDuration) {
-  const workSlotResult = await pool.query(
-    `SELECT id, date, start_time, end_time
-     FROM work_slots
-     WHERE master_id = $1 AND date = $2`,
-    [master_id, date]
-  );
-
-  if (workSlotResult.rows.length === 0) return [];
-  
-  const { start_time, end_time } = workSlotResult.rows[0];
-  
-  const appointmentsResult = await pool.query(
-    `SELECT start_time, duration 
-     FROM bookings 
-     WHERE master_id = $1 AND date = $2`,
-    [master_id, date]
-  );
-  
-  const allSlots = [];
-  let current = new Date(`${date}T${start_time}`);
-  const end = new Date(`${date}T${end_time}`);
-  
-  while (current < end) {
-    allSlots.push({
-      time: current.toTimeString().slice(0, 5),
-      available: true
-    });
-    current.setMinutes(current.getMinutes() + 15);
+function timeToMinutes(timeStr) {
+  if (!timeStr) {
+    console.error('Не передано время');
+    return 0;
   }
   
-  appointmentsResult.rows.forEach(appointment => {
-    const appStart = new Date(`${date}T${appointment.start_time}`);
-    const appEnd = new Date(appStart);
-    appEnd.setMinutes(appStart.getMinutes() + appointment.duration);
-    
-    allSlots.forEach(slot => {
-      const slotTime = new Date(`${date}T${slot.time}`);
-      if (slotTime >= appStart && slotTime < appEnd) {
-        slot.available = false;
-      }
-    });
-  });
-  
-  return allSlots.filter(slot => {
-    if (!slot.available) return false;
-    
-    const slotStart = new Date(`${date}T${slot.time}`);
-    const slotEnd = new Date(slotStart);
-    slotEnd.setMinutes(slotStart.getMinutes() + serviceDuration);
-    
-    for (let t = new Date(slotStart); t < slotEnd; t.setMinutes(t.getMinutes() + 120)) {
-      const timeStr = t.toTimeString().slice(0, 5);
-      const slot = allSlots.find(s => s.time === timeStr);
-      if (!slot || !slot.available) return false;
+  try {
+    if (typeof timeStr === 'string') {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + (minutes || 0);
+    } else if (timeStr?.hours !== undefined) {
+      return timeStr.hours * 60 + (timeStr.minutes || 0);
     }
-    
-    return true;
-  }).map(slot => slot.time);
+    return 0;
+  } catch (e) {
+    console.error('Ошибка конвертации времени:', timeStr, e);
+    return 0;
+  }
 }
 
-const calculateAvailableTimes = (slotStart, slotEnd, bookings, serviceDuration) => {
-  const slotStartMinutes = timeToMinutes(slotStart);
-  const slotEndMinutes = timeToMinutes(slotEnd);
-  const intervalDuration = 120;
-  let availableTimes = [];
+function intervalToMinutes(intervalStr) {
+  if (typeof intervalStr === 'number') return intervalStr;
   
-  for (let time = slotStartMinutes; time <= slotEndMinutes - intervalDuration; time += intervalDuration) {
-    const timeStr = minutesToTime(time);
-    const endTimeStr = minutesToTime(time + intervalDuration);
-    
-    const isAvailable = bookings.every(booking => {
-      const bookingStart = timeToMinutes(booking.start_time);
-      const bookingEnd = bookingStart + booking.duration;
-      return time + intervalDuration <= bookingStart || time >= bookingEnd;
-    });
-    
-    if (isAvailable) {
-      availableTimes.push({
-        start: timeStr,
-        end: endTimeStr
-      });
-    }
+  if (typeof intervalStr === 'string' && intervalStr.includes(':')) {
+    const [hours, minutes] = intervalStr.split(':').map(Number);
+    return hours * 60 + minutes;
   }
   
-  return availableTimes;
-};
+  return parseInt(intervalStr) || 0;
+}
 
-async function checkTimeAvailability(workSlotId, startTime, duration) {
+function extractMinutesFromInterval(intervalStr) {
+  const parts = intervalStr.split(':');
+  return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+}
+
+
+async function getWorkSlotDetails(workSlotId) {
   try {
     const slotResult = await pool.query(
-      'SELECT start_time, end_time FROM work_slots WHERE id = $1',
+      `SELECT start_time, end_time 
+       FROM work_slots 
+       WHERE id = $1`,
       [workSlotId]
     );
-    
+
     if (slotResult.rows.length === 0) {
       throw new Error('Рабочий слот не найден');
     }
 
-    const slot = slotResult.rows[0];
-    const slotStart = new Date(`1970-01-01T${slot.start_time}Z`);
-    const slotEnd = new Date(`1970-01-01T${slot.end_time}Z`);
-    const requestedStart = new Date(`1970-01-01T${startTime}Z`);
-    const requestedEnd = new Date(requestedStart.getTime() + duration * 60000);
-
-    
-    if (requestedStart < slotStart || requestedEnd > slotEnd) {
-      return false;
-    }
-
-    
-    const bookingsResult = await pool.query(
-      `SELECT start_time, duration FROM bookings 
-       WHERE work_slot_id = $1 AND status != 'cancelled'`,
-      [workSlotId]
-    );
-
-    for (const booking of bookingsResult.rows) {
-      const bookingStart = new Date(`1970-01-01T${booking.start_time}Z`);
-      const bookingEnd = new Date(bookingStart.getTime() + booking.duration * 60000);
-      
-      if (requestedStart < bookingEnd && requestedEnd > bookingStart) {
-        return false;  
-      }
-    }
-
-    return true;
+    return slotResult.rows[0];
   } catch (err) {
-    console.error('Error in checkTimeAvailability:', err);
+    console.error('Error in getWorkSlotDetails:', err);
     throw err;
   }
 }
 
+async function getBookingsForSlot(workSlotId) {
+  try {
+    const result = await pool.query(
+      `SELECT 
+         id,
+         start_time, 
+         duration,
+         service_duration
+       FROM bookings 
+       WHERE work_slot_id = $1 AND status != 'canceled'`,
+      [workSlotId]
+    );
+    
+    return result.rows.map(row => ({
+      id: row.id,
+      start: row.start_time,
+      duration: row.duration, // Оставляем как интервал
+      service_duration: row.service_duration // Оставляем как интервал
+    }));
+  } catch (err) {
+    console.error('Ошибка получения бронирований:', err);
+    return [];
+  }
+}
+
+
+async function checkTimeAvailability(workSlotId, startTime, durationMinutes) {
+  const { start_time: slotStart, end_time: slotEnd } = await getWorkSlotDetails(workSlotId);
+  const bookings = await getBookingsForSlot(workSlotId);
+
+  const reqStart = timeToMinutes(startTime);
+  const reqEnd = reqStart + durationMinutes;
+  const slotStartMin = timeToMinutes(slotStart);
+  const slotEndMin = timeToMinutes(slotEnd);
+
+  // 1. Проверка границ рабочего слота
+  if (reqStart < slotStartMin || reqEnd > slotEndMin) {
+    return false;
+  }
+
+  // 2. Проверка пересечений с существующими бронированиями
+  const hasConflict = bookings.some(booking => {
+    const bookStart = timeToMinutes(booking.start_time);
+    const bookEnd = bookStart + booking.duration_minutes;
+    
+    // Проверяем 4 возможных варианта пересечения
+    return (
+      (reqStart >= bookStart && reqStart < bookEnd) || // Начало внутри существующего
+      (reqEnd > bookStart && reqEnd <= bookEnd) ||    // Конец внутри существующего
+      (reqStart <= bookStart && reqEnd >= bookEnd)    // Полное перекрытие
+    );
+  });
+
+  return !hasConflict;
+}
+
 module.exports = {
-  getAvailableTimes, checkTimeAvailability
+  getWorkSlotDetails,
+  getBookingsForSlot,
+  checkTimeAvailability,
+  timeToMinutes,
+  intervalToMinutes,
+  extractMinutesFromInterval
 };

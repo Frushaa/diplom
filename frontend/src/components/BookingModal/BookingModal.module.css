@@ -1,0 +1,279 @@
+/* Основные стили модального окна */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 900px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Шапка модального окна */
+.modalHeader {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.closeButton:hover {
+  color: #333;
+}
+
+/* Основной контент */
+.bookingContainer {
+  display: flex;
+  min-height: 500px;
+}
+
+/* Блок услуг (левая часть) */
+.servicesSection {
+  flex: 1;
+  padding: 20px;
+  border-right: 1px solid #eee;
+  max-width: 350px;
+}
+
+.servicesTitle {
+  margin-top: 0;
+  color: #444;
+  font-size: 1.2rem;
+}
+
+.servicesList {
+  margin-top: 15px;
+}
+
+.serviceItem {
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid #e0e0e0;
+}
+
+.serviceItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #ccc;
+}
+
+.serviceItem.selected {
+  background-color: #f8f9fa;
+  border-color: #007bff;
+}
+
+.serviceMainInfo {
+  display: flex;
+  justify-content: space-between;
+}
+
+.serviceName {
+  font-weight: 600;
+  color: #333;
+}
+
+.servicePriceTime {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.checkIcon {
+  color: #955ed4;
+  margin-left: 10px;
+}
+
+/* Блок календаря (правая часть) */
+.calendarSection {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendarTitle {
+  margin-top: 0;
+  color: #444;
+  font-size: 1.2rem;
+}
+
+/* Блок выбора времени */
+.timeSelection {
+  margin-top: 20px;
+}
+
+.timeTitle {
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.timeSlots {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  max-height: 170px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.timeSlot {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.timeSlot:hover {
+  border-color: #955ed4;
+}
+
+.timeSlot.selected {
+  background-color: #955ed4;
+  color: white;
+  border-color: #955ed4;
+}
+
+.durationHint {
+  font-size: 0.7rem;
+  color: #666666;
+  display: block;
+  margin-top: 5px;
+}
+
+.timeSlot.selected .durationHint {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Блок подтверждения */
+.confirmation {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.confirmationText {
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+}
+
+.primaryButton {
+  background-color: #955ed4;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.primaryButton:hover {
+  background-color: #9035f8;
+}
+
+.primaryButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Сообщения об ошибках */
+.errorMessage {
+  color: #dc3545;
+  margin: 10px 0;
+  font-size: 0.9rem;
+}
+
+.successMessage {
+  text-align: center;
+  padding: 20px;
+}
+
+.successTitle {
+  color: #28a745;
+  margin-bottom: 10px;
+}
+
+/* Индикатор загрузки */
+.loading {
+  padding: 2rem;
+  text-align: center;
+}
+
+.modalEnter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.modalEnterActive {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 300ms ease-out;
+}
+
+.modalExit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.modalExitActive {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 300ms ease-in;
+}
+
+/* Адаптивные стили */
+@media (max-width: 768px) {
+  .bookingContainer {
+    flex-direction: column;
+  }
+  
+  .servicesSection {
+    max-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .timeSlots {
+    grid-template-columns: 1fr;
+  }
+}

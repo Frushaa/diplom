@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaTimes, FaCheck } from 'react-icons/fa';
 import api from '../../services/api';
-import styles from '../../pages/masterPage/MasterProfile.module.css';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './BookingCalendar.css';
+import styles from './BookingModal.module.css';
+import Notification from '../Notification/Notification';
 
 const BookingModal = ({ isOpen, onClose }) => {
   const [selectedService, setSelectedService] = useState(null);
@@ -16,17 +17,70 @@ const BookingModal = ({ isOpen, onClose }) => {
   const [availableTimes, setAvailableTimes] = useState([]);
   const [selectedSlotId, setSelectedSlotId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [notificationType, setNotificationType] = useState('success');
+
+  const canSubmit = selectedService && selectedDate && selectedTime;
+  
+  const processAvailableTimes = (slotData) => {
+    if (!slotData || !slotData.slotStart || !slotData.slotEnd) {
+      console.error('Invalid slot data');
+      return [];
+    }
+
+    const timeToMinutes = (timeStr) => {
+      if (!timeStr) return 0;
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return hours * 60 + minutes;
+    };
+
+    const minutesToTime = (minutes) => {
+      const hrs = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:00`;
+    };
+
+    const slotStart = timeToMinutes(slotData.slotStart);
+    const slotEnd = timeToMinutes(slotData.slotEnd);
+    const duration = 120;
+    const bookings = slotData.bookings || [];
+
+    let availableSlots = [];
+    
+    for (let time = slotStart; time + duration <= slotEnd; time += duration) {
+      const isAvailable = !bookings.some(booking => {
+        const bookingStart = timeToMinutes(booking.start_time || booking.start);
+        const bookingDuration = booking.duration?.hours * 60 + 
+                              (booking.duration?.minutes || 0) || 
+                              booking.duration || 
+                              120;
+        const bookingEnd = bookingStart + bookingDuration;
+        
+        return time < bookingEnd && (time + duration) > bookingStart;
+      });
+
+      if (isAvailable) {
+        availableSlots.push({
+          start: minutesToTime(time),
+          end: minutesToTime(time + duration),
+          duration: duration
+        });
+      }
+    }
+
+    return availableSlots;
+  };
 
   const isWorkDay = (date) => {
-  return workSlots.some(slot => {
-    const slotDate = new Date(slot.date);
-    return (
-      slotDate.getDate() === date.getDate() &&
-      slotDate.getMonth() === date.getMonth() &&
-      slotDate.getFullYear() === date.getFullYear()
-    );
-  });
+    return workSlots.some(slot => {
+      const slotDate = new Date(slot.date);
+      return (
+        slotDate.getDate() === date.getDate() &&
+        slotDate.getMonth() === date.getMonth() &&
+        slotDate.getFullYear() === date.getFullYear()
+      );
+    });
   };
 
   const formatTimeDisplay = (timeObj) => {
@@ -43,11 +97,10 @@ const BookingModal = ({ isOpen, onClose }) => {
           api.get('/services'),
           api.get('/schedule/work-slots')
         ]);
-        
         setServices(servicesRes.data);
         setWorkSlots(slotsRes.data);
       } catch (err) {
-        setError('Не удалось загрузить данные');
+        showNotificationMessage('Не удалось загрузить данные', 'error');
       } finally {
         setIsLoading(false);
       }
@@ -56,11 +109,24 @@ const BookingModal = ({ isOpen, onClose }) => {
     fetchData();
   }, [isOpen]);
 
+  const showNotificationMessage = (message, type = 'success') => {
+    setNotificationMessage(message);
+    setNotificationType(type);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 5000);
+  };
+
   const handleDateSelect = async (date) => {
     const slot = workSlots.find(s => new Date(s.date).toDateString() === date.toDateString());
+
+    if (!selectedService) {
+      showNotificationMessage('Сначала выберите услугу', 'error');
+      setSelectedDate(null);
+      return;
+    }
     
     if (!slot) {
-      setError('В этот день салон не работает');
+      showNotificationMessage('В этот день салон не работает', 'error');
       setSelectedDate(null);
       setSelectedTime(null);
       return;
@@ -68,22 +134,27 @@ const BookingModal = ({ isOpen, onClose }) => {
 
     setSelectedSlotId(slot.id);
     setSelectedDate(date);
-    setError('');
 
     try {
-      const response = await api.get(`/schedule/available-times/${slot.id}`);
-        setAvailableTimes(response.data);
+      const response = await api.get(`/bookings/available-slots/${slot.id}`);
+      
+      if (!response.data.bookings) {
+        response.data.bookings = [];
+      }
+
+      const processedTimes = processAvailableTimes(response.data);
+      setAvailableTimes(processedTimes);
+      
+      if (processedTimes.length === 0) {
+        showNotificationMessage('На выбранную дату нет свободных слотов', 'error');
+      }
     } catch (err) {
-      setError('Ошибка загрузки доступного времени');
+      console.error('Error:', err);
+      showNotificationMessage('Ошибка при загрузке доступного времени', 'error');
     }
   };
 
   const handleSubmit = async () => {
-    if (!selectedService || !selectedDate || !selectedTime) {
-      setError('Пожалуйста, заполните все поля');
-      return;
-    }
-
     try {
       await api.post('/bookings', {
         service_id: selectedService.id,
@@ -91,116 +162,145 @@ const BookingModal = ({ isOpen, onClose }) => {
         start_time: selectedTime.start,
         duration: 120
       });
-      onClose();
+
+      showNotificationMessage(
+        `Запись подтверждена: ${selectedService.title} на ${selectedDate.toLocaleDateString()} в ${selectedTime.start}`,
+        'success'
+      );
+      
+      // Закрываем модальное окно после успешного бронирования
+      setTimeout(() => {
+        onClose();
+        // Сброс состояния
+        setSelectedService(null);
+        setSelectedDate(null);
+        setSelectedTime(null);
+      }, 2000);
+      
     } catch (err) {
-      setError('Ошибка при записи. Попробуйте другое время.');
+      console.error('Booking failed:', err.response?.data);
+      showNotificationMessage(
+        err.response?.data?.error || 'Ошибка при записи. Возможно, время уже занято.',
+        'error'
+      );
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className={styles.modalOverlay}>
-      <motion.div 
-        className={styles.modalContent}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-      >
-      <div className={styles.modalHeader}>
-        <h3>Запись на услугу</h3>
-        <button onClick={onClose} className={styles.closeButton}>
-          <FaTimes />
-         </button>
-      </div>
-
-      {isLoading ? (
-        <div className={styles.loading}>
-          <p>Загрузка данных...</p>
-        </div>
-      ) : error ? (
-        <div className={styles.error} style={{ color: '#dc2626', textAlign: 'center' }}>
-          {error}
-        </div>
-      ) : (
-        <div className={styles.bookingContainer}>
-          <div className={styles.servicesSection}>
-            <h4>Выберите услугу:</h4>
-            <div className={styles.servicesList}>
-              {services.map(service => (
-                <motion.div
-                  key={service.id}
-                  className={`${styles.serviceItem} ${selectedService?.id === service.id ? styles.selectedItem : ''}`}
-                  whileHover={{ scale: 1.02 }}
-                  onClick={() => setSelectedService(service)}
-                >
-                  <div className={styles.serviceMainInfo}>
-                    <span className={styles.serviceName}>{service.title}</span>
-                    <span className={styles.servicePriceTime}>
-                      {service.price}₽ • {service.duration} мин
-                    </span>
-                  </div>
-                  {selectedService?.id === service.id && (
-                    <FaCheck className={styles.checkIcon} />
-                  )}
-                </motion.div>
-              ))}
+    <>
+      {isOpen && (
+        <div className={styles.modalOverlay}>
+          <motion.div 
+            className={styles.modalContent}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <div className={styles.modalHeader}>
+              <h3>Запись на услугу</h3>
+              <button onClick={onClose} className={styles.closeButton}>
+                <FaTimes />
+              </button>
             </div>
-          </div>
 
-          <div className={styles.calendarSection}>
-            <h4>Выберите дату и время:</h4>
-            
-            <Calendar
-              onChange={handleDateSelect}
-              value={selectedDate}
-              tileClassName={({ date }) => 
-                isWorkDay(date) ? styles.workDayTile : styles.nonWorkDayTile
-              }
-              tileDisabled={({ date }) => !isWorkDay(date)}
-              minDate={new Date()}
-            />
-              
-            {selectedDate && availableTimes.length > 0 && (
-              <div className={styles.timeSelection}>
-                <h5>Доступное время:</h5>
-                <div className={styles.timeSlots}>
-                  {availableTimes.map((time, index) => (
-                    <button
-                      key={index}
-                      className={`${styles.timeSlot} ${
-                        selectedTime?.start === time.start ? styles.selectedTime : ''
-                      }`}
-                      onClick={() => setSelectedTime(time)}
-                    >
-                      {formatTimeDisplay(time)}
-                    </button>
-                  ))}
+            {isLoading ? (
+              <div className={styles.loading}>
+                <p>Загрузка данных...</p>
+              </div>
+            ) : (
+              <div className={styles.bookingContainer}>
+                <div className={styles.servicesSection}>
+                  <h4>Выберите услугу:</h4>
+                  <div className={styles.servicesList}>
+                    {services.map(service => (
+                      <motion.div
+                        key={service.id}
+                        className={`${styles.serviceItem} ${selectedService?.id === service.id ? styles.selectedItem : ''}`}
+                        whileHover={{ scale: 1.03 }}
+                        onClick={() => setSelectedService(service)}
+                      >
+                        <div className={styles.serviceMainInfo}>
+                          <span className={styles.serviceName}>{service.title}</span>
+                          <span className={styles.servicePriceTime}>
+                            {service.duration} мин • {service.price}₽
+                          </span>
+                        </div>
+                        {selectedService?.id === service.id && (
+                          <FaCheck className={styles.checkIcon} />
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.calendarSection}>
+                  <h4>Выберите дату и время:</h4>
+                  
+                  <Calendar
+                    onChange={handleDateSelect}
+                    value={selectedDate}
+                    tileClassName={({ date }) => 
+                      isWorkDay(date) ? styles.workDayTile : styles.nonWorkDayTile
+                    }
+                    tileDisabled={({ date }) => !isWorkDay(date)}
+                    minDate={new Date()}
+                  />
+                    
+                  {selectedDate && availableTimes.length > 0 && (
+                    <div className={styles.timeSelection}>
+                      <h5>Доступное время:</h5>
+                      <div className={styles.timeSlots}>
+                          {availableTimes.map((slot, index) => (
+                            <button
+                              key={`${slot.start}-${slot.end}`}
+                              className={`${styles.timeSlot} ${
+                                selectedTime?.start === slot.start ? styles.selectedTime : ''
+                              }`}
+                              onClick={() => setSelectedTime(slot)}
+                            >
+                              {slot.start} - {slot.end}
+                              <span className={styles.durationHint}>
+                                ({Math.floor(slot.duration/60)}ч {slot.duration%60}мин)
+                              </span>
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                    
+                  {selectedTime && (
+                    <div className={styles.confirmation}>
+                      <p>
+                        Вы хотите записаться на услугу <strong>{selectedService.title}</strong><br />
+                        <strong>{selectedDate.toLocaleDateString()}</strong> в{' '}
+                        <strong>{formatTimeDisplay(selectedTime)}</strong>
+                      </p>
+                      <button
+                        className={styles.primaryButton}
+                        onClick={handleSubmit}
+                        disabled={!canSubmit}
+                      >
+                        Подтвердить запись
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
-              
-            {selectedTime && (
-              <div className={styles.confirmation}>
-                <p>
-                  Вы хотите записаться на услугу <strong>{selectedService.title}</strong><br />
-                  <strong>{selectedDate.toLocaleDateString()}</strong> в{' '}
-                  <strong>{formatTimeDisplay(selectedTime)}</strong>
-                </p>
-                <button
-                  className={styles.primaryButton}
-                  onClick={handleSubmit}
-                >
-                  Подтвердить запись
-                </button>
-              </div>
-            )}
-          </div>
+          </motion.div>
         </div>
       )}
-    </motion.div>
-  </div>
-);
+      {showNotification && (
+        <Notification 
+          message={notificationMessage}
+          type={notificationType}
+          onClose={() => setShowNotification(false)}
+        />
+      )}
+    </>
+  );
 };
 
 export default BookingModal;

@@ -31,6 +31,17 @@ class Booking {
     );
     return result.rows[0];
   }
-}
 
+  static async findByWorkSlot(workSlotId) {
+    const result = await pool.query(
+      `SELECT id, start_time, duration, status
+      FROM bookings
+      WHERE work_slot_id = $1 AND status != 'cancelled'
+      ORDER BY start_time`,
+      [workSlotId]
+    );
+    return result.rows;
+  }
+
+}
 module.exports = Booking;
