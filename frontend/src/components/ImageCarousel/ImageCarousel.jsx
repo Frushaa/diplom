@@ -19,8 +19,8 @@ const ImageCarousel = () => {
   };
 
   const images = [
-    '/images/ilyw00_4.jpg',
-    '/images/sbef0_1.jpg',
+    '/images/carusel.jpg',
+    '/images/qwerty.jpg',
     '/images/scuf11_7.jpg'
   ];
 

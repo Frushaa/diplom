@@ -146,7 +146,7 @@ const ProfileSettings = () => {
       
       <form onSubmit={handleSubmit} className={styles.settingsForm}>
         <div className={styles.avatarUpload}>
-          <div className={styles.avatarPreview}>
+          {/* <div className={styles.avatarPreview}>
             <img src={previewAvatar} alt="Аватар" className={styles.avatarImage} />
             <label className={styles.avatarEdit}>
               <FaCamera className={styles.cameraIcon} />
@@ -157,7 +157,7 @@ const ProfileSettings = () => {
                 className={styles.avatarInput}
               />
             </label>
-          </div>
+          </div> */}
         </div>
 
         <div className={styles.formGroup}>

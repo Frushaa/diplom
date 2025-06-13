@@ -2,31 +2,22 @@ const pool = require('../../config/db');
 const express = require('express');
 const router = express.Router();
 const { authenticate, checkRole } = require('../../middleware/roleMiddleware');
+const Notification = require('../../models/Notification');
+const { sendNotification } = require('../../websocket');
 const Booking = require('../../models/Booking');
 const { 
   getWorkSlotDetails, 
   getBookingsForSlot, 
-  checkTimeAvailability,
-  extractMinutesFromInterval
 } = require('../../utils/bookingUtils');
-
-async function getServiceDuration(serviceId) {
-  const res = await pool.query(
-    'SELECT duration FROM services WHERE id = $1',
-    [serviceId]
-  );
-  return res.rows[0]?.duration;
-}
 
 router.post('/', authenticate, checkRole('client'), async (req, res) => {
   try {
     const { service_id, work_slot_id, start_time } = req.body;
     const client_id = req.user.id;
 
-    // 1. Получаем данные услуги и рабочего слота
     const [serviceRes, workSlotRes] = await Promise.all([
-      pool.query('SELECT duration FROM services WHERE id = $1', [service_id]),
-      pool.query('SELECT date FROM work_slots WHERE id = $1', [work_slot_id])
+      pool.query('SELECT s.duration, s.title FROM services s WHERE s.id = $1', [service_id]),
+      pool.query('SELECT date, master_id FROM work_slots WHERE id = $1', [work_slot_id])
     ]);
 
     if (serviceRes.rows.length === 0 || workSlotRes.rows.length === 0) {
@@ -35,11 +26,26 @@ router.post('/', authenticate, checkRole('client'), async (req, res) => {
       });
     }
 
+    const formatDate = (date) => {
+      const options = { day: 'numeric', month: 'long' };
+      return date.toLocaleDateString('ru-RU', options);
+    };
+
+    const formatTime = (timeStr) => {
+      const [hours, minutes] = timeStr.split(':');
+      return `${hours}:${minutes}`;
+    };
+
+    const service = serviceRes.rows[0];
+    const workSlot = workSlotRes.rows[0];
     const serviceDuration = serviceRes.rows[0].duration;
-    const bookingDuration = '2:00:00'; // Фиксированная длительность брони
+    const bookingDuration = '2:00:00';
     const date = workSlotRes.rows[0].date;
 
-    // 2. Создаем бронирование
+    const bookingDate = new Date(workSlot.date);
+    const formattedDate = formatDate(bookingDate);
+    const formattedTime = formatTime(start_time); 
+
     const result = await pool.query(
       `INSERT INTO bookings 
        (client_id, service_id, work_slot_id, date, 
@@ -57,10 +63,42 @@ router.post('/', authenticate, checkRole('client'), async (req, res) => {
       ]
     );
 
+    const booking = result.rows[0];
+
+    const clientMessage = `Вы записаны на услугу "${service.title}" на ${formattedDate} в ${formattedTime}`;
+    await Notification.create({
+      user_id: client_id,
+      message: clientMessage,
+      booking_id: booking.id,
+      type: 'client'
+    });
+    await sendNotification(client_id, {
+      message: clientMessage,
+      booking_id: booking.id,
+      created_at: new Date().toISOString()
+    });
+
+    if (workSlot.master_id) {
+      const masterMessage = `К вам записался клиент "${req.user.username}" на ${formattedDate} в ${formattedTime} на услугу "${service.title}"`;
+      
+      await Notification.create({
+        user_id: workSlot.master_id,
+        message: masterMessage,
+        booking_id: booking.id,
+        type: 'master'
+      });
+      
+      await sendNotification(client_id, {
+        message: clientMessage,
+        booking_id: booking.id,
+        created_at: new Date().toISOString()
+      });
+    }
+
+
     res.status(201).json(result.rows[0]);
     
   } catch (err) {
-    // 3. Обрабатываем ошибки
     if (err.code === '23P01') {
       return res.status(400).json({ error: 'Выбранное время занято' });
     }
@@ -125,5 +163,57 @@ router.patch(
     }
   }
 );
+
+router.get('/upcoming', authenticate, checkRole('client'), async (req, res) => {
+  try {
+    const bookings = await Booking.findUpcomingByClient(req.user.id);
+    res.json(bookings);
+  } catch (err) {
+    console.error('Ошибка при получении предстоящих записей:', err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+router.get('/client/history', authenticate, checkRole('client'), async (req, res) => {
+  try {
+    const bookings = await Booking.findHistoryByClient(req.user.id);
+    res.json(bookings);
+  } catch (err) {
+    console.error('Ошибка:', err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+router.get('/debug', async (req, res) => {
+  try {
+    // 1. Проверка подключения модели
+    const testData = await Booking.findHistoryByClient(1); 
+    
+    // 2. Проверка ответа
+    res.json({
+      modelWorks: !!testData,
+      requestReceived: true,
+      testData: testData.slice(0, 3) // Первые 3 записи
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+      stack: err.stack
+    });
+  }
+});
+
+router.delete('/:id', authenticate, checkRole('client'), async (req, res) => {
+  try {
+    const booking = await Booking.cancel(req.params.id);
+    if (!booking) {
+      return res.status(404).json({ error: 'Запись не найдена' });
+    }
+    res.json({ message: 'Запись успешно отменена' });
+  } catch (err) {
+    console.error('Ошибка при отмене записи:', err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
 
 module.exports = router;

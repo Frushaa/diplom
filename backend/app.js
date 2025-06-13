@@ -9,7 +9,9 @@ const pool = require('./config/db');
 const createDefaultMaster = require('./utils/createDefaultMaster');
 const scheduleRouter = require('./routes/master/schedule');
 const bookingsRouter = require('./routes/master/bookings');
+const notificationsRouter = require('./routes/notifications');
 const cors = require('cors');
+const { setupWebSocket } = require('./websocket');
 
 const app = express();
 
@@ -32,6 +34,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/services', servicesRouter);
 app.use('/api/schedule', scheduleRouter);
 app.use('/api/bookings', bookingsRouter);
+app.use('/api/notifications', notificationsRouter);
 
 
 (async () => {
@@ -42,9 +45,12 @@ app.use('/api/bookings', bookingsRouter);
     await createDefaultMaster();
     
     const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`[+] Swagger доступен по адресу: http://localhost:${PORT}/api-docs`);
     });
+
+    setupWebSocket(server);
+    
   } catch (err) {
     console.error('[!] Ошибка:', err);
     process.exit(1);

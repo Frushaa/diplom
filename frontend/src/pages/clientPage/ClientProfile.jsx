@@ -1,13 +1,29 @@
-import { useAppSelector } from '../../store/store';
+import { useAppSelector, useAppDispatch  } from '../../store/store';
 import ClientHeader from '../../components/Headers/ClientHeader';
-import styles from './ClientProfile.module.css';
-import { FaHistory, FaCalendarAlt, FaStar, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { FaHistory, FaCalendarAlt, FaCog, FaSignOutAlt } from 'react-icons/fa';
 import ProfileSettings from './ProfileSettings';
 import { useState } from 'react';
+import UpcomingBookings from './bookingsTab/UpcomingBookings';
+import styles from './ClientProfile.module.css';
+import HistoryBookings from './HistoryBookings/HistoryBookings';
+import { logout } from '../../store/slices/authSlice'; 
+import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
 
 const ClientProfile = () => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user } = useAppSelector(state => state.auth);
   const [activeTab, setActiveTab] = useState('bookings');
+
+  const handleLogout = async () => {
+    try {
+      dispatch(logout()); 
+      navigate('/login'); 
+    } catch (err) {
+      console.error('Ошибка при выходе:', err);
+    }
+  };
   
   return (
     <div className={styles.profileContainer}>
@@ -24,14 +40,17 @@ const ClientProfile = () => {
           </div>
           
           <nav className={styles.sidebarNav}>
-            <button className={`${styles.navButton} ${styles.active}`}>
-              <FaHistory /> История записей
-            </button>
-            <button className={styles.navButton}>
+            <button 
+              className={`${styles.navButton} ${activeTab === 'bookings' ? styles.active : ''}`}
+              onClick={() => setActiveTab('bookings')}
+            >
               <FaCalendarAlt /> Предстоящие записи
             </button>
-            <button className={styles.navButton}>
-              <FaStar /> Избранные мастера
+            <button 
+              className={`${styles.navButton} ${activeTab === 'history' ? styles.active : ''}`}
+              onClick={() => setActiveTab('history')}
+            >
+              <FaHistory /> История записей
             </button>
             <button 
               className={`${styles.navButton} ${activeTab === 'settings' ? styles.active : ''}`}
@@ -39,13 +58,19 @@ const ClientProfile = () => {
             >
               <FaCog /> Настройки
             </button>
-            <button className={styles.navButton}>
+            <button 
+              className={styles.navButton}
+              onClick={handleLogout}
+            >
               <FaSignOutAlt /> Выйти
             </button>
+
           </nav>
         </aside>
 
         <main className={styles.mainContent}>
+          {activeTab === 'history' && <HistoryBookings />}
+          {activeTab === 'bookings' && <UpcomingBookings />}
           {activeTab === 'settings' && (
             <section className={styles.section}>
               <ProfileSettings />

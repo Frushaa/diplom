@@ -73,8 +73,8 @@ async function getBookingsForSlot(workSlotId) {
     return result.rows.map(row => ({
       id: row.id,
       start: row.start_time,
-      duration: row.duration, // Оставляем как интервал
-      service_duration: row.service_duration // Оставляем как интервал
+      duration: row.duration, 
+      service_duration: row.service_duration 
     }));
   } catch (err) {
     console.error('Ошибка получения бронирований:', err);
@@ -92,21 +92,18 @@ async function checkTimeAvailability(workSlotId, startTime, durationMinutes) {
   const slotStartMin = timeToMinutes(slotStart);
   const slotEndMin = timeToMinutes(slotEnd);
 
-  // 1. Проверка границ рабочего слота
   if (reqStart < slotStartMin || reqEnd > slotEndMin) {
     return false;
   }
 
-  // 2. Проверка пересечений с существующими бронированиями
   const hasConflict = bookings.some(booking => {
     const bookStart = timeToMinutes(booking.start_time);
     const bookEnd = bookStart + booking.duration_minutes;
     
-    // Проверяем 4 возможных варианта пересечения
     return (
-      (reqStart >= bookStart && reqStart < bookEnd) || // Начало внутри существующего
-      (reqEnd > bookStart && reqEnd <= bookEnd) ||    // Конец внутри существующего
-      (reqStart <= bookStart && reqEnd >= bookEnd)    // Полное перекрытие
+      (reqStart >= bookStart && reqStart < bookEnd) || 
+      (reqEnd > bookStart && reqEnd <= bookEnd) ||    
+      (reqStart <= bookStart && reqEnd >= bookEnd)    
     );
   });
 
