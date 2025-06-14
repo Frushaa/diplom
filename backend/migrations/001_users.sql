@@ -21,3 +21,4 @@ ALTER TABLE IF EXISTS public.users OWNER TO postgres;
 
 GRANT ALL ON TABLE public.users TO nail_user;
 GRANT ALL ON TABLE public.users TO postgres;
+
