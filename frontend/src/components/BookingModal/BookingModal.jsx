@@ -87,28 +87,27 @@ const BookingModal = ({ isOpen, onClose }) => {
     return `${timeObj.start} - ${timeObj.end}`;
   };
 
-  const formatPostgresInterval = (interval) => {
-  if (!interval) return '0 минут';
+  const formatDuration = (duration) => {
+  // Если приходит число (90.000...) или строка с числом ("90.000...")
+  const minutes = typeof duration === 'string' 
+    ? parseFloat(duration)
+    : Number(duration);
   
-  // Разбиваем "HH:MM:SS" на части
-  const [hoursStr, minutesStr] = interval.split(':');
-  const hours = parseInt(hoursStr) || 0;
-  const minutes = parseInt(minutesStr) || 0;
+  if (minutes === 30) return '30 минут';
+  if (minutes === 60) return '1 час';
+  if (minutes === 90) return '1.5 часа';
+  if (minutes === 120) return '2 часа';
   
-  // Специальные случаи
-  if (hours === 1 && minutes === 30) return '1.5 часа';
-  if (hours === 0 && minutes === 30) return '30 минут';
-  if (hours === 1 && minutes === 0) return '1 час';
-  if (hours === 2 && minutes === 0) return '2 часа';
+  const hours = Math.floor(minutes / 60);
+  const mins = Math.round(minutes % 60);
   
-  // Общий случай
   if (hours > 0) {
-    if (minutes === 0) return `${hours} час${hours > 1 ? 'а' : ''}`;
-    if (minutes === 30) return `${hours}.5 часа`;
-    return `${hours} час${hours > 1 ? 'а' : ''} ${minutes} минут`;
+    if (mins === 30) return `${hours}.5 часа`;
+    if (mins === 0) return `${hours} час${hours > 1 ? 'а' : ''}`;
+    return `${hours} час${hours > 1 ? 'а' : ''} ${mins} минут`;
   }
   
-  return `${minutes} минут`;
+  return `${Math.round(minutes)} минут`;
 };
 
   useEffect(() => {
@@ -117,9 +116,13 @@ const BookingModal = ({ isOpen, onClose }) => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/services');
+      const [servicesRes, workSlotsRes] = await Promise.all([
+          api.get('/services'),
+          api.get('/schedule/work-slots') // Получаем рабочие слоты
+        ]);
       
-      setServices(response.data);
+      setServices(servicesRes.data);
+      setWorkSlots(workSlotsRes.data);
     } catch (err) {
       showNotificationMessage('Не удалось загрузить данные', 'error');
     } finally {
@@ -208,6 +211,13 @@ const BookingModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  console.log('Sample service data:', {
+    id: services[0]?.id,
+    title: services[0]?.title,
+    duration: services[0]?.duration,
+    formatted: formatDuration(services[0]?.duration)
+  });
+
   return (
     <>
       {isOpen && (
@@ -244,7 +254,7 @@ const BookingModal = ({ isOpen, onClose }) => {
                         <div className={styles.serviceMainInfo}>
                           <span className={styles.serviceName}>{service.title}</span>
                           <span className={styles.servicePriceTime}>
-                            {formatPostgresInterval(service.duration)} • {service.price}₽
+                            {formatDuration(service.duration)} • {service.price}₽
                           </span>
                         </div>
                         {selectedService?.id === service.id && (

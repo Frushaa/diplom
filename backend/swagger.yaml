@@ -2,6 +2,7 @@ openapi: 3.0.0
 info:
   title: Diplom API
   version: 1.0.0
+  description: API для системы бронирования услуг мастеров
 servers:
   - url: http://localhost:3001/api
     description: Локальный сервер
@@ -25,6 +26,9 @@ components:
         role:
           type: string
           enum: [client, master]
+        phone:
+          type: string
+          nullable: true
     Service:
       type: object
       properties:
@@ -36,6 +40,7 @@ components:
           type: string
         price:
           type: number
+          format: float
         duration:
           type: integer
           description: Длительность услуги в минутах
@@ -53,7 +58,6 @@ components:
           type: string
         end_time:
           type: string
-
     AvailableTime:
       type: object
       properties:
@@ -63,26 +67,17 @@ components:
         end:
           type: string
           description: Конец доступного интервала (HH:MM)
-      example:
-        start: "10:00"
-        end: "12:00"
-
     BookingRequest:
       type: object
       properties:
         service_id:
           type: integer
-          example: 1
         work_slot_id:
           type: integer
-          example: 1
         start_time:
           type: string
-          example: "14:30"
         duration:
           type: integer
-          example: 45
-
     Booking:
       type: object
       properties:
@@ -101,7 +96,31 @@ components:
         status:
           type: string
           enum: [pending, confirmed, canceled]
-
+        service_title:
+          type: string
+        date:
+          type: string
+          format: date
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        message:
+          type: string
+        booking_id:
+          type: integer
+          nullable: true
+        type:
+          type: string
+          enum: [client, master]
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
     ErrorResponse:
       type: object
       properties:
@@ -109,6 +128,13 @@ components:
           type: string
         details:
           type: string
+    ValidationError:
+      type: object
+      properties:
+        errors:
+          type: object
+          additionalProperties:
+            type: string
 
 paths:
   /auth/register:
@@ -124,14 +150,18 @@ paths:
               properties:
                 username:
                   type: string
+                  minLength: 3
                 email:
                   type: string
+                  format: email
                 password:
                   type: string
+                  minLength: 6
                 role:
                   type: string
                   enum: [client, master]
                   default: client
+              required: [username, email, password]
               example:
                 username: "testuser"
                 email: "test@example.com"
@@ -146,6 +176,12 @@ paths:
                 $ref: '#/components/schemas/User'
         '400':
           description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Ошибка сервера
           content:
             application/json:
               schema:
@@ -164,8 +200,10 @@ paths:
               properties:
                 email:
                   type: string
+                  format: email
                 password:
                   type: string
+              required: [email, password]
               example:
                 email: "test@example.com"
                 password: "secret123"
@@ -179,8 +217,18 @@ paths:
                 properties:
                   token:
                     type: string
-        '401':
+                  email:
+                    type: string
+                  role:
+                    type: string
+        '400':
           description: Неверные учетные данные
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /auth/profile:
     get:
@@ -197,6 +245,58 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           description: Неавторизованный доступ
+        '404':
+          description: Пользователь не найден
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Auth]
+      summary: Обновить профиль пользователя
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                  nullable: true
+              required: [username, email]
+      responses:
+        '200':
+          description: Профиль обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Неавторизованный доступ
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /services:
     get:
@@ -211,6 +311,13 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Service'
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     post:
       tags: [Services]
       summary: Создать новую услугу (только для мастера)
@@ -225,16 +332,23 @@ paths:
               properties:
                 title:
                   type: string
-                  example: "Мужская стрижка"
+                  minLength: 3
+                  maxLength: 100
                 description:
                   type: string
-                  example: "Стрижка машинкой"
+                  maxLength: 500
                 price:
                   type: number
-                  example: 1500
+                  format: float
                 duration:
-                  type: integer
-                  example: 60
+                  type: string
+                  pattern: '^\d+\.?\d*\s(minutes|hour|hours)$'
+              required: [title, price, duration]
+              example:
+                title: "Мужская стрижка"
+                description: "Стрижка машинкой"
+                price: 1500
+                duration: "60 minutes"
       responses:
         '201':
           description: Услуга успешно создана
@@ -252,6 +366,13 @@ paths:
           description: Неавторизованный доступ
         '403':
           description: Недостаточно прав
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     delete:
       tags: [Services]
       summary: Удалить услуги (только для мастера)
@@ -273,6 +394,10 @@ paths:
           description: Нет прав доступа
         '500':
           description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /schedule/work-slots:
     post:
@@ -290,13 +415,17 @@ paths:
                 date:
                   type: string
                   format: date
-                  example: "2023-10-10"
                 start_time:
                   type: string
-                  example: "10:00"
+                  pattern: '^\d{2}:\d{2}$'
                 end_time:
                   type: string
-                  example: "21:00"
+                  pattern: '^\d{2}:\d{2}$'
+              required: [date, start_time, end_time]
+              example:
+                date: "2023-10-10"
+                start_time: "10:00"
+                end_time: "18:00"
       responses:
         '201':
           description: Создан рабочий слот
@@ -314,8 +443,13 @@ paths:
           description: Неавторизованный доступ
         '403':
           description: Недостаточно прав
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /schedule/work-slots:
     get:
       tags: [Schedule]
       summary: Получить рабочие слоты мастера (публичный доступ)
@@ -336,7 +470,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /schedule/available-times/{work_slot_id}::
+  /schedule/available-times/{work_slot_id}:
     get:
       tags: [Schedule]
       summary: Получить доступное время для бронирования
@@ -406,12 +540,12 @@ paths:
         '404':
           description: Рабочий слот не найден
         '500':
-          description: Внутренняя ошибка сервера
+          description: Ошибка сервера
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-      
+
   /bookings:
     post:
       tags: [Bookings]
@@ -441,6 +575,258 @@ paths:
           description: Неавторизованный доступ
         '403':
           description: Недостаточно прав
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [Bookings]
+      summary: Получить список бронирований пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список бронирований
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '401':
+          description: Неавторизованный доступ
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bookings/upcoming:
+    get:
+      tags: [Bookings]
+      summary: Получить предстоящие бронирования (клиент)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список предстоящих бронирований
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '401':
+          description: Неавторизованный доступ
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bookings/client/history:
+    get:
+      tags: [Bookings]
+      summary: Получить историю бронирований (клиент)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: История бронирований
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '401':
+          description: Неавторизованный доступ
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bookings/master:
+    get:
+      tags: [Bookings]
+      summary: Получить бронирования мастера
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, canceled]
+        - name: upcoming
+          in: query
+          schema:
+            type: boolean
+        - name: history
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Список бронирований мастера
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '401':
+          description: Неавторизованный доступ
+        '403':
+          description: Недостаточно прав
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /bookings/{id}:
+    delete:
+      tags: [Bookings]
+      summary: Отменить бронирование (клиент)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Бронирование отменено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '401':
+          description: Неавторизованный доступ
+        '403':
+          description: Недостаточно прав
+        '404':
+          description: Бронирование не найдено
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: Получить уведомления пользователя
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Список уведомлений
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '401':
+          description: Неавторизованный доступ
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications/unread-count:
+    get:
+      tags: [Notifications]
+      summary: Получить количество непрочитанных уведомлений
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Количество непрочитанных уведомлений
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+        '401':
+          description: Неавторизованный доступ
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications/mark-as-read:
+    patch:
+      tags: [Notifications]
+      summary: Пометить все уведомления как прочитанные
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешно помечены как прочитанные
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '401':
+          description: Неавторизованный доступ
+        '500':
+          description: Ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /notifications/{id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Пометить уведомление как прочитанное
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Уведомление помечено как прочитанное
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '401':
+          description: Неавторизованный доступ
+        '404':
+          description: Уведомление не найдено
         '500':
           description: Ошибка сервера
           content:
