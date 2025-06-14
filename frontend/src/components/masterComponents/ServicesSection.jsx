@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiEdit } from 'react-icons/fi';
+import { FiTrash2 } from 'react-icons/fi';
 import api from '../../services/api';
 import styles from '../../pages/masterPage/MasterProfile.module.css';
 import { useAppDispatch, useAppSelector } from '../../store/store';
-import { addService } from '../../store/slices/servicesSlice';
+import { addService, removeServices } from '../../store/slices/servicesSlice';
 
 const ServicesSection = ({ 
   isModal = false, 
@@ -12,7 +12,6 @@ const ServicesSection = ({
   isDeleteMode,
   selectedServices,
   onToggleService,
-  onEditService
 }) => {
   const { services } = useAppSelector(state => state.services);
   const [newService, setNewService] = useState({
@@ -54,6 +53,15 @@ const ServicesSection = ({
       
     } catch (error) {
       console.error('Ошибка:', error.response?.data);
+    }
+  };
+
+  const handleDeleteService = async (serviceId) => {
+    try {
+      await api.delete('/services', { data: { ids: [serviceId] } });
+      dispatch(removeServices([serviceId]));
+    } catch (error) {
+      console.error('Ошибка при удалении услуги:', error.response?.data);
     }
   };
 
@@ -155,9 +163,9 @@ const ServicesSection = ({
                   <div className={styles.serviceActions}>
                     <button 
                       className={styles.actionButton}
-                      onClick={() => onEditService(service)}
+                      onClick={() => handleDeleteService(service.id)}
                     >
-                      <FiEdit size={16} />
+                      <FiTrash2 size={16} />
                     </button>
                   </div>
                 )}

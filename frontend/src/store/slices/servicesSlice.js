@@ -31,5 +31,5 @@ const servicesSlice = createSlice({
   }
 });
 
-export const { setServices, addService } = servicesSlice.actions;
+export const { setServices, addService, removeServices } = servicesSlice.actions;
 export default servicesSlice.reducer;
