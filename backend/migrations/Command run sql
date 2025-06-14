@@ -1,0 +1,11 @@
+Для запуска миграций введите комманды поочерёдно
+
+psql -u postgres -d nail_services -a -f migrations/001_users.sql
+
+psql -u postgres -d nail_services -a -f migrations/002_add_bookings.sql
+
+psql -u postgres -d nail_services -a -f migrations/003_notifications.sql
+
+psql -u postgres -d nail_services -a -f migrations/004_services.sql
+
+psql -u postgres -d nail_services -a -f migrations/005_workSlots.sql
