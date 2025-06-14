@@ -87,27 +87,49 @@ const BookingModal = ({ isOpen, onClose }) => {
     return `${timeObj.start} - ${timeObj.end}`;
   };
 
+  const formatPostgresInterval = (interval) => {
+  if (!interval) return '0 минут';
+  
+  // Разбиваем "HH:MM:SS" на части
+  const [hoursStr, minutesStr] = interval.split(':');
+  const hours = parseInt(hoursStr) || 0;
+  const minutes = parseInt(minutesStr) || 0;
+  
+  // Специальные случаи
+  if (hours === 1 && minutes === 30) return '1.5 часа';
+  if (hours === 0 && minutes === 30) return '30 минут';
+  if (hours === 1 && minutes === 0) return '1 час';
+  if (hours === 2 && minutes === 0) return '2 часа';
+  
+  // Общий случай
+  if (hours > 0) {
+    if (minutes === 0) return `${hours} час${hours > 1 ? 'а' : ''}`;
+    if (minutes === 30) return `${hours}.5 часа`;
+    return `${hours} час${hours > 1 ? 'а' : ''} ${minutes} минут`;
+  }
+  
+  return `${minutes} минут`;
+};
+
   useEffect(() => {
-    if (!isOpen) return;
+  if (!isOpen) return;
 
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        const [servicesRes, slotsRes] = await Promise.all([
-          api.get('/services'),
-          api.get('/schedule/work-slots')
-        ]);
-        setServices(servicesRes.data);
-        setWorkSlots(slotsRes.data);
-      } catch (err) {
-        showNotificationMessage('Не удалось загрузить данные', 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/services');
+      
+      setServices(response.data);
+    } catch (err) {
+      showNotificationMessage('Не удалось загрузить данные', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchData();
-  }, [isOpen]);
+  fetchData();
+}, [isOpen]);
+
 
   const showNotificationMessage = (message, type = 'success') => {
     setNotificationMessage(message);
@@ -168,10 +190,8 @@ const BookingModal = ({ isOpen, onClose }) => {
         'success'
       );
       
-      // Закрываем модальное окно после успешного бронирования
       setTimeout(() => {
         onClose();
-        // Сброс состояния
         setSelectedService(null);
         setSelectedDate(null);
         setSelectedTime(null);
@@ -224,7 +244,7 @@ const BookingModal = ({ isOpen, onClose }) => {
                         <div className={styles.serviceMainInfo}>
                           <span className={styles.serviceName}>{service.title}</span>
                           <span className={styles.servicePriceTime}>
-                            {service.duration} мин • {service.price}₽
+                            {formatPostgresInterval(service.duration)} • {service.price}₽
                           </span>
                         </div>
                         {selectedService?.id === service.id && (

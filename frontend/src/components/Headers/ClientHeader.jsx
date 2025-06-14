@@ -122,12 +122,10 @@ const ClientHeader = () => {
           </div>
           
           <div className={styles.userMenu}>
-            <img 
-              src={user?.avatar || '/default-avatar.png'} 
-              alt={user?.username} 
-              className={styles.avatar}
-            />
-            <span className={styles.userName}>{user?.username}</span>
+            <div className={styles.avatar}>
+              {user?.username?.charAt(0).toUpperCase()}
+            </div>
+            <span className={styles.userName}>{user?.username} </span>
           </div>
           <button onClick={handleLogout} className={styles.logoutButton}>
             <FaSignOutAlt />

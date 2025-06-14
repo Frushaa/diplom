@@ -164,7 +164,7 @@ router.patch(
   }
 );
 
-router.get('/upcoming', authenticate, checkRole('client'), async (req, res) => {
+router.get('/upcoming', authenticate, async (req, res) => {
   try {
     const bookings = await Booking.findUpcomingByClient(req.user.id);
     res.json(bookings);
@@ -174,32 +174,13 @@ router.get('/upcoming', authenticate, checkRole('client'), async (req, res) => {
   }
 });
 
-router.get('/client/history', authenticate, checkRole('client'), async (req, res) => {
+router.get('/client/history', authenticate, async (req, res) => {
   try {
     const bookings = await Booking.findHistoryByClient(req.user.id);
     res.json(bookings);
   } catch (err) {
     console.error('Ошибка:', err);
     res.status(500).json({ error: 'Ошибка сервера' });
-  }
-});
-
-router.get('/debug', async (req, res) => {
-  try {
-    // 1. Проверка подключения модели
-    const testData = await Booking.findHistoryByClient(1); 
-    
-    // 2. Проверка ответа
-    res.json({
-      modelWorks: !!testData,
-      requestReceived: true,
-      testData: testData.slice(0, 3) // Первые 3 записи
-    });
-  } catch (err) {
-    res.status(500).json({
-      error: err.message,
-      stack: err.stack
-    });
   }
 });
 
@@ -212,6 +193,48 @@ router.delete('/:id', authenticate, checkRole('client'), async (req, res) => {
     res.json({ message: 'Запись успешно отменена' });
   } catch (err) {
     console.error('Ошибка при отмене записи:', err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+router.get('/master', authenticate, checkRole('master'), async (req, res) => {
+  try {
+    const { status, upcoming, history } = req.query;
+    const masterId = req.user.id;
+    
+    let query = `
+      SELECT 
+        b.id, 
+        b.date, 
+        b.start_time, 
+        b.duration, 
+        b.status,
+        s.title as service_title,
+        s.price,
+        u.username as client_name
+      FROM bookings b
+      JOIN services s ON b.service_id = s.id
+      JOIN users u ON b.client_id = u.id
+      JOIN work_slots ws ON b.work_slot_id = ws.id
+      WHERE ws.master_id = $1
+    `;
+    
+    const params = [masterId];
+    
+    if (upcoming === 'true') {
+      query += ' AND (b.date > CURRENT_DATE OR (b.date = CURRENT_DATE AND b.start_time > CURRENT_TIME))';
+    }
+    
+    if (history === 'true') {
+      query += ' AND (b.date < CURRENT_DATE OR (b.date = CURRENT_DATE AND b.start_time < CURRENT_TIME))';
+    }
+    
+    query += ' ORDER BY b.date, b.start_time';
+    
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Ошибка при получении записей мастера:', err);
     res.status(500).json({ error: 'Ошибка сервера' });
   }
 });

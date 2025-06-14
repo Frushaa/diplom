@@ -25,7 +25,7 @@
 
 .react-calendar__navigation button:enabled:hover,
 .react-calendar__navigation button:enabled:focus {
-  background-color: #f5f3ff;
+  background-color: #dddbe498;
 }
 
 .react-calendar__month-view__weekdays {
@@ -33,7 +33,7 @@
   text-transform: uppercase;
   font-weight: bold;
   font-size: 0.8em;
-  color: #666;
+  color: #fed2ff5b;
 }
 
 .react-calendar__month-view__weekdays__weekday {
@@ -55,7 +55,7 @@
 
 .react-calendar__tile:enabled:hover,
 .react-calendar__tile:enabled:focus {
-  background-color: #f5f3ff;
+  background-color: #8b5cf6;
 }
 
 .react-calendar__tile--now {

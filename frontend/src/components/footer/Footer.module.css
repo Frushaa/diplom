@@ -20,7 +20,7 @@
 }
 
 .footerLogo {
-  font-family: 'Modak', cursive;
+  font-family: 'Modak';
   font-size: 2rem;
   color: #f7fafc;
   text-decoration: none;
@@ -53,6 +53,7 @@
   color: #9f7aea;
 }
 
+
 .footerNav ul,
 .footerContacts ul,
 .footerHours ul {
@@ -79,16 +80,21 @@
   background-color: #9f7aea;
 }
 
-.footerLink {
+.navLink {
+  background: none;
+  border: none;
+  padding: 0;
   color: #cbd5e0;
   text-decoration: none;
   display: block;
   padding: 0.5rem 0;
   transition: color 0.3s ease;
+  font-size: 1.05rem;
 }
 
-.footerLink:hover {
+.navLink:hover {
   color: #9f7aea;
+  cursor: pointer;
 }
 
 .footerContacts li {

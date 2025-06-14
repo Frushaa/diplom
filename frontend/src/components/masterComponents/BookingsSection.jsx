@@ -1,86 +1,85 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import styles from '../../pages/masterPage/MasterProfile.module.css';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
-const BookingsSection = () => {
+const BookingsTable = () => {
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState('upcoming'); // 'upcoming' или 'past'
 
-  // Загрузка бронирований
   useEffect(() => {
-    const loadBookings = async () => {
+    const fetchBookings = async () => {
       try {
-        const response = await api.get('/api/bookings');
-        setBookings(response.data);
+        const params = {};
+        if (filter === 'upcoming') params.upcoming = 'true';
+        if (filter === 'past') params.history = 'true';
+        
+        const { data } = await api.get('/bookings/master', { params });
+        setBookings(data);
       } catch (error) {
-        console.error('Ошибка загрузки бронирований:', error);
+        console.error('Ошибка загрузки записей:', error);
       } finally {
         setIsLoading(false);
       }
     };
-    loadBookings();
-  }, []);
+    
+    fetchBookings();
+  }, [filter]);
 
-  // Изменение статуса бронирования
-  const handleStatusChange = async (bookingId, newStatus) => {
-    try {
-      await api.patch(`/bookings/${bookingId}/status`, { 
-        status: newStatus 
-      });
-      
-      setBookings(bookings.map(booking => 
-        booking.id === bookingId 
-          ? { ...booking, status: newStatus } 
-          : booking
-      ));
-    } catch (error) {
-      console.error('Ошибка обновления статуса:', error);
-    }
-  };
-
-  if (isLoading) return <div className={styles.loading}>Загрузка...</div>;
+  if (isLoading) return <div className={styles.loading}>Загрузка записей...</div>;
 
   return (
     <div className={styles.section}>
-      <h3>Текущие записи</h3>
+      <div className={styles.sectionHeader}>
+        <h3>Записи клиентов</h3>
+        <div className={styles.filterButtons}>
+          <button
+            className={`${styles.filterButton} ${filter === 'upcoming' ? styles.activeFilter : ''}`}
+            onClick={() => setFilter('upcoming')}
+          >
+            Предстоящие
+          </button>
+          <button
+            className={`${styles.filterButton} ${filter === 'past' ? styles.activeFilter : ''}`}
+            onClick={() => setFilter('past')}
+          >
+            Прошедшие
+          </button>
+        </div>
+      </div>
 
-      <div className={styles.bookingsList}>
-        {bookings.map(booking => (
-          <div key={booking.id} className={styles.bookingCard}>
-            <div className={styles.bookingHeader}>
-              <span className={styles.clientName}>
-                {booking.client_name}
-              </span>
-              <span className={styles.bookingDate}>
-                {new Date(booking.date).toLocaleDateString()} {booking.time}
-              </span>
-            </div>
-
-            <div className={styles.bookingBody}>
-              <div className={styles.serviceInfo}>
-                <span>{booking.service_title}</span>
-                <span>{booking.duration}</span>
-                <span>{booking.price}₽</span>
-              </div>
-
-              <div className={styles.statusControl}>
-                <select
-                  value={booking.status}
-                  onChange={(e) => handleStatusChange(booking.id, e.target.value)}
-                  className={styles.statusSelect}
-                >
-                  <option value="pending">Ожидание</option>
-                  <option value="confirmed">Подтверждено</option>
-                  <option value="completed">Завершено</option>
-                  <option value="cancelled">Отменено</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className={styles.bookingsContainer}>
+        {bookings.length === 0 ? (
+          <p className={styles.noBookings}>Нет записей</p>
+        ) : (
+          <table className={styles.bookingsTable}>
+            <thead>
+              <tr>
+                <th>Клиент</th>
+                <th>Услуга</th>
+                <th>Дата и время</th>
+                <th>Стоимость</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map(booking => (
+                <tr key={booking.id}>
+                  <td>{booking.client_name}</td>
+                  <td>{booking.service_title}</td>
+                  <td>
+                    {format(new Date(booking.date), 'EEEE, d MMMM yyyy', { locale: ru })} в {booking.start_time}
+                  </td>
+                  <td>{booking.price}₽</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
 };
 
-export default BookingsSection;
+export default BookingsTable;

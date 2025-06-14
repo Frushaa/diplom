@@ -21,7 +21,6 @@ const ImageCarousel = () => {
   const images = [
     '/images/carusel.jpg',
     '/images/qwerty.jpg',
-    '/images/scuf11_7.jpg'
   ];
 
   return (

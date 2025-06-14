@@ -1,8 +1,19 @@
 import { Link } from 'react-router-dom';
 import styles from './Footer.module.css';
 import { FaInstagram, FaVk, FaMapMarkerAlt, FaPhoneAlt, FaEnvelope, FaTelegram } from 'react-icons/fa';
+import { scroller } from 'react-scroll';
+
 
 const Footer = () => {
+  const scrollToSection = (sectionId) => {
+    scroller.scrollTo(sectionId, {
+      duration: 800,
+      delay: 0,
+      smooth: 'easeInOutQuart',
+      offset: -100
+    });
+  };
+
   return (
     <footer className={styles.footer}>
       <div className={styles.footerContainer}>
@@ -27,13 +38,26 @@ const Footer = () => {
 
         <div className={styles.footerNav}>
           <h3 className={styles.footerTitle}>Навигация</h3>
-          <ul>
-            <li><Link to="/about" className={styles.footerLink}>О нас</Link></li>
-            <li><Link to="/services" className={styles.footerLink}>Услуги</Link></li>
-            <li><Link to="/faq" className={styles.footerLink}>FAQ</Link></li>
-            <li><Link to="/masters" className={styles.footerLink}>Мастера</Link></li>
-            <li><Link to="/portfolio" className={styles.footerLink}>Портфолио</Link></li>
-          </ul>
+          <div className={styles.centerNav}>
+            <button 
+              onClick={() => scrollToSection('about')} 
+              className={styles.navLink} 
+            >
+              О нас
+            </button>
+            <button 
+              onClick={() => scrollToSection('services')} 
+                className={styles.navLink}
+            >
+              Услуги
+            </button>
+            <button 
+              onClick={() => scrollToSection('faq')}
+              className={styles.navLink}
+            >
+              FAQ
+            </button>      
+          </div>        
         </div>
 
         <div className={styles.footerContacts}>
@@ -60,7 +84,6 @@ const Footer = () => {
             <li>Пн-Пт: 10:00 - 21:00</li>
             <li>Сб-Вс: 10:00 - 20:00</li>
           </ul>
-          <button className={styles.bookingButton}>Записаться онлайн</button>
         </div>
       </div>
 

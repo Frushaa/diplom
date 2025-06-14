@@ -49,9 +49,6 @@ const ScheduleSection = ({ onClose }) => {
     <div className={styles.section}>
       <div className={styles.modalHeader}>
         <h3>Добавить рабочий слот</h3>
-        <button onClick={onClose} className={styles.closeButton}>
-          ×
-        </button>
       </div>
 
       <div className={styles.serviceForm}>
@@ -109,10 +106,10 @@ const ScheduleSection = ({ onClose }) => {
               <div key={slot.id} className={styles.serviceItem}>
                 <div className={styles.serviceMainInfo}>
                   <span className={styles.serviceName}>
-                    {new Date(slot.date).toLocaleDateString('ru-RU')}
+                    Дата: {new Date(slot.date).toLocaleDateString('ru-RU')}
                   </span>
                   <span className={styles.servicePriceTime}>
-                    {slot.start_time} - {slot.end_time}
+                    Время: {slot.start_time} - {slot.end_time}
                   </span>
                 </div>
                 <button 

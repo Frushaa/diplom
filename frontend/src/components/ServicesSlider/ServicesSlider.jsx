@@ -84,7 +84,6 @@ const ServicesSlider = () => {
                   {formatDuration(service.duration)}
                 </span>
               </div>
-              <button className={styles.bookButton}>Записаться</button>
             </div>
           ))}
         </Slider>

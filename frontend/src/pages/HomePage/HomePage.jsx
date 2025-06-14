@@ -67,12 +67,8 @@ const HomePage = () => {
             </div>
             <div className={styles.aboutFeatures}>
               <div className={styles.featureCard}>
-                <h3>2500+</h3>
+                <h3>500+</h3>
                 <p>Довольных клиентов</p>
-              </div>
-              <div className={styles.featureCard}>
-                <h3>20+</h3>
-                <p>Профессиональных мастеров</p>
               </div>
               <div className={styles.featureCard}>
                 <h3>5 лет</h3>

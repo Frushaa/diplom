@@ -71,9 +71,6 @@ const ServicesSection = ({
       {isModal && (
         <div className={styles.modalHeader}>
           <h3>Добавить услугу</h3>
-          <button onClick={onClose} className={styles.closeButton}>
-            ×
-          </button>
         </div>
       )}
 

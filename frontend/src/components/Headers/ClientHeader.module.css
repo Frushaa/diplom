@@ -76,13 +76,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
+  justify-content: center;
 }
 
 .userName {
@@ -170,6 +164,24 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.notificationsButton:hover {
+  color:#7c3aed
+}
+
+.avatar {
+  width: 2.2rem;
+  height: 2.2rem;
+  background: linear-gradient(135deg, #cfbff1, #7750b9);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0 auto;
 }
 
 .notificationsList {
