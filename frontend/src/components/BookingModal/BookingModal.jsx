@@ -88,7 +88,6 @@ const BookingModal = ({ isOpen, onClose }) => {
   };
 
   const formatDuration = (duration) => {
-  // Если приходит число (90.000...) или строка с числом ("90.000...")
   const minutes = typeof duration === 'string' 
     ? parseFloat(duration)
     : Number(duration);
@@ -118,7 +117,7 @@ const BookingModal = ({ isOpen, onClose }) => {
       setIsLoading(true);
       const [servicesRes, workSlotsRes] = await Promise.all([
           api.get('/services'),
-          api.get('/schedule/work-slots') // Получаем рабочие слоты
+          api.get('/schedule/work-slots') 
         ]);
       
       setServices(servicesRes.data);

@@ -1,3 +1,4 @@
+CREATE SEQUENCE IF NOT EXISTS notifications_id_seq;
 CREATE TABLE IF NOT EXISTS public.notifications (
     id integer NOT NULL DEFAULT nextval('notifications_id_seq'::regclass),
     user_id integer,
@@ -29,3 +30,6 @@ ALTER TABLE IF EXISTS public.notifications OWNER TO postgres;
 REVOKE ALL ON TABLE public.notifications FROM nail_user;
 GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE public.notifications TO nail_user;
 GRANT ALL ON TABLE public.notifications TO postgres;
+
+GRANT ALL PRIVILEGES ON SEQUENCE notifications_id_seq TO nail_user;
+GRANT ALL PRIVILEGES ON SEQUENCE notifications_id_seq TO postgres;

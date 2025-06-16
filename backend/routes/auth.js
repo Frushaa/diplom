@@ -80,9 +80,16 @@ router.post('/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
+    const refreshToken = jwt.sign(
+      { userId: user.rows[0].id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: '7d' }
+
+    );
 
     res.status(200).json({ 
       token,
+      refreshToken,
       email: user.rows[0].email,
       role: user.rows[0].role 
     });
@@ -144,6 +151,46 @@ router.put('/profile', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Ошибка обновления профиля:', err);
     res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+
+router.post('/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      return res.status(401).json({ error: 'Refresh token required' });
+    }
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    
+    const user = await pool.query('SELECT * FROM users WHERE id = $1', [decoded.userId]);
+    if (user.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
+
+    const newAccessToken = jwt.sign(
+      { userId: user.rows[0].id, role: user.rows[0].role },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    const newRefreshToken = jwt.sign(
+      { userId: user.rows[0].id },
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(200).json({
+      token: newAccessToken,
+      refreshToken: newRefreshToken
+    });
+  } catch (err) {
+    console.error('Refresh token error:', err);
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid refresh token' });
+    }
+    res.status(500).json({ error: 'Server error' });
   }
 });
 

@@ -1,3 +1,4 @@
+CREATE SEQUENCE IF NOT EXISTS services_id_seq;
 CREATE TABLE IF NOT EXISTS public.services (
     id integer NOT NULL DEFAULT nextval('services_id_seq'::regclass),
     master_id integer,
@@ -19,3 +20,6 @@ ALTER TABLE IF EXISTS public.services OWNER TO postgres;
 
 GRANT ALL ON TABLE public.services TO nail_user;
 GRANT ALL ON TABLE public.services TO postgres;
+
+GRANT ALL PRIVILEGES ON SEQUENCE services_id_seq TO nail_user;
+GRANT ALL PRIVILEGES ON SEQUENCE services_id_seq TO postgres;

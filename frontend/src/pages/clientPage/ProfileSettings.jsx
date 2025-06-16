@@ -40,7 +40,7 @@ const ProfileSettings = () => {
         avatar: null
       });
       
-      setPreviewAvatar(data.avatar || '/default-avatar.png');
+      
     } catch (error) {
       console.error('Ошибка загрузки профиля:', error);
     }
@@ -145,20 +145,6 @@ const ProfileSettings = () => {
       <h2 className={styles.settingsTitle}>Настройки профиля</h2>
       
       <form onSubmit={handleSubmit} className={styles.settingsForm}>
-        <div className={styles.avatarUpload}>
-          {/* <div className={styles.avatarPreview}>
-            <img src={previewAvatar} alt="Аватар" className={styles.avatarImage} />
-            <label className={styles.avatarEdit}>
-              <FaCamera className={styles.cameraIcon} />
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className={styles.avatarInput}
-              />
-            </label>
-          </div> */}
-        </div>
 
         <div className={styles.formGroup}>
           <label className={styles.inputLabel}>

@@ -78,7 +78,7 @@ class Booking {
   }
 
   static async findHistoryByClient(client_id) {
-    console.log(`Executing query for client: ${client_id}`); // Логирование
+    console.log(`Executing query for client: ${client_id}`); 
     
     const result = await pool.query(
       `SELECT 

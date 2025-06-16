@@ -1,3 +1,5 @@
+CREATE SEQUENCE IF NOT EXISTS bookings_id_seq;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
 CREATE TABLE IF NOT EXISTS public.bookings (
     id integer NOT NULL DEFAULT nextval('bookings_id_seq'::regclass),
     client_id integer,
@@ -45,3 +47,6 @@ REVOKE ALL ON TABLE public.bookings FROM nail_user;
 GRANT INSERT, SELECT, UPDATE, DELETE ON TABLE public.bookings TO nail_user;
 
 GRANT ALL ON TABLE public.bookings TO postgres;
+
+GRANT ALL PRIVILEGES ON SEQUENCE bookings_id_seq TO nail_user;
+GRANT ALL PRIVILEGES ON SEQUENCE bookings_id_seq TO postgres;

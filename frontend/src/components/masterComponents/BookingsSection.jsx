@@ -7,7 +7,7 @@ import { ru } from 'date-fns/locale';
 const BookingsTable = () => {
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState('upcoming'); // 'upcoming' или 'past'
+  const [filter, setFilter] = useState('upcoming'); 
 
   useEffect(() => {
     const fetchBookings = async () => {

@@ -1,3 +1,4 @@
+CREATE SEQUENCE IF NOT EXISTS USERS_id_seq;
 CREATE TABLE IF NOT EXISTS public.users (
     id integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
     username character varying(50) COLLATE pg_catalog."default" NOT NULL,
@@ -22,3 +23,5 @@ ALTER TABLE IF EXISTS public.users OWNER TO postgres;
 GRANT ALL ON TABLE public.users TO nail_user;
 GRANT ALL ON TABLE public.users TO postgres;
 
+GRANT ALL PRIVILEGES ON SEQUENCE users_id_seq TO nail_user;
+GRANT ALL PRIVILEGES ON SEQUENCE users_id_seq TO postgres;
